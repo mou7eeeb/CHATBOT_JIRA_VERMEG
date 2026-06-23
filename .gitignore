@@ -1,0 +1,117 @@
+# Backend (Spring Boot)
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/.idea/
+backend/*.iml
+backend/*.iws
+backend/*.ipr
+backend/.settings/
+backend/.classpath
+backend/.project
+backend/bin/
+backend/build/
+backend/.gradle/
+
+# Frontend (Angular)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.vscode/
+frontend/.editorconfig
+frontend/coverage/
+frontend/.nyc_output/
+frontend/e2e/
+frontend/*.spec.ts
+
+# Sensitive files
+**/.env
+**/.env.local
+**/.env.*.local
+**/application-local.properties
+**/application-dev.properties
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+.project
+.classpath
+.settings/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~.nib
+*.cache
+
+# Build artifacts
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Database
+*.db
+*.sqlite
+*.h2.db
+h2/
+
+# Documentation non nécessaire
+HELP.md
+
+# Fichiers système Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Fichiers de sauvegarde
+*~
+*.orig
+*.rej
+
+# Node
+package-lock.json.bak
+yarn.lock.bak
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Gradle
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+
+# Fichiers de test
+*.test.js
+*.test.ts
+*.spec.js

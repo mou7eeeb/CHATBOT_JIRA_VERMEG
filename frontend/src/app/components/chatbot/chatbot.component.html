@@ -1,0 +1,105 @@
+<div class="page-layout">
+  <app-sidebar></app-sidebar>
+  
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="header-content">
+        <div class="header-title">
+          <svg class="jira-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.005-1.005zm5.723-5.756H5.736a5.215 5.215 0 0 0 5.215 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.758a1.001 1.001 0 0 0-1.001-1.001zM11.294 0H23.02a1 1 0 0 1 1 1v11.725a5.214 5.214 0 0 1-5.215-5.214V5.453h-2.129A5.214 5.214 0 0 1 11.294 0z" fill="#2684FF"/>
+          </svg>
+          <h1>AI Jira Assistant</h1>
+        </div>
+        <button class="clear-btn" (click)="clearChat()" title="Clear chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  <div class="chat-messages">
+    <div *ngFor="let message of messages" 
+         class="message-wrapper"
+         [class.user-message]="message.sender === 'user'"
+         [class.bot-message]="message.sender === 'bot'">
+      
+      <div class="message-bubble" [class.error]="message.error">
+        <div class="message-text">{{ message.text }}</div>
+        
+        <div *ngIf="message.isLoading" class="loading-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <div *ngIf="message.jqlQuery" class="jql-query">
+          <strong>JQL Query:</strong> <code>{{ message.jqlQuery }}</code>
+        </div>
+
+        <div *ngIf="message.tickets && message.tickets.length > 0" class="tickets-container">
+          <div class="tickets-header">
+            <span class="tickets-count">{{ getFilteredTickets(message.tickets).length }} ticket(s)</span>
+            <select [(ngModel)]="selectedStatus" class="status-filter">
+              <option *ngFor="let status of getUniqueStatuses(message.tickets)" [value]="status">
+                {{ status === 'all' ? 'All Statuses' : status }}
+              </option>
+            </select>
+          </div>
+
+          <div class="tickets-list">
+            <div *ngFor="let ticket of getFilteredTickets(message.tickets)" class="ticket-card">
+              <div class="ticket-header">
+                <span class="ticket-key">{{ ticket.key }}</span>
+                <span class="ticket-type">{{ ticket.fields.issuetype.name }}</span>
+              </div>
+              
+              <div class="ticket-summary">{{ ticket.fields.summary }}</div>
+              
+              <div class="ticket-meta">
+                <span class="ticket-status" [style.background-color]="getStatusColor(ticket.fields.status.name)">
+                  {{ ticket.fields.status.name }}
+                </span>
+                
+                <span *ngIf="ticket.fields.priority" 
+                      class="ticket-priority" 
+                      [style.color]="getPriorityColor(ticket.fields.priority.name)">
+                  {{ ticket.fields.priority.name }}
+                </span>
+                
+                <span *ngIf="ticket.fields.assignee" class="ticket-assignee">
+                  👤 {{ ticket.fields.assignee.displayName }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="message-time">{{ message.timestamp | date:'short' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-input-container">
+    <div class="input-wrapper">
+      <input 
+        type="text" 
+        [(ngModel)]="userInput"
+        (keyup.enter)="sendMessage()"
+        [disabled]="isLoading"
+        placeholder="Ask about Jira tickets... (e.g., 'show me open bugs in CRM')"
+        class="chat-input"
+      />
+      <button 
+        (click)="sendMessage()" 
+        [disabled]="!userInput.trim() || isLoading"
+        class="send-btn"
+        title="Send message">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+  </div>

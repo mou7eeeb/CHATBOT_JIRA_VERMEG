@@ -1,0 +1,12 @@
+<!-- Layout avec sidebar pour les pages protégées -->
+<div *ngIf="!isAuthPage" class="app-layout">
+  <app-sidebar></app-sidebar>
+  <div class="main-content">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+
+<!-- Pages d'authentification sans sidebar -->
+<div *ngIf="isAuthPage" class="auth-layout">
+  <router-outlet></router-outlet>
+</div>

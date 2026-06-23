@@ -1,0 +1,117 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="logo">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#gradient1)"/>
+          <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="url(#gradient2)"/>
+          <defs>
+            <linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="12">
+              <stop offset="0%" stop-color="#667eea"/>
+              <stop offset="100%" stop-color="#764ba2"/>
+            </linearGradient>
+            <linearGradient id="gradient2" x1="2" y1="12" x2="22" y2="22">
+              <stop offset="0%" stop-color="#f093fb"/>
+              <stop offset="100%" stop-color="#f5576c"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <h1>Create Account</h1>
+      <p>Start your journey with Jira Chatbot</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="auth-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">First Name</label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            [(ngModel)]="signupRequest.firstName"
+            placeholder="John"
+            required
+            [disabled]="loading"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="lastName">Last Name</label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            [(ngModel)]="signupRequest.lastName"
+            placeholder="Doe"
+            required
+            [disabled]="loading"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="signupRequest.email"
+          placeholder="you@company.com"
+          required
+          [disabled]="loading"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="signupRequest.password"
+          placeholder="••••••••"
+          required
+          [disabled]="loading"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          [(ngModel)]="confirmPassword"
+          placeholder="••••••••"
+          required
+          [disabled]="loading"
+        />
+      </div>
+
+      <div class="error-message" *ngIf="error">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        {{ error }}
+      </div>
+
+      <button type="submit" class="btn-primary" [disabled]="loading">
+        <span *ngIf="!loading">Create Account</span>
+        <span *ngIf="loading" class="loading-spinner">
+          <svg class="spinner" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
+            <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" opacity="0.75"></path>
+          </svg>
+          Creating account...
+        </span>
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Already have an account? <a routerLink="/login">Sign in</a></p>
+    </div>
+  </div>
+</div>

@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-forgot-password',
@@ -19,8 +20,12 @@ export class ForgotPasswordComponent {
   errorMessage = '';
   successMessage = '';
   isLoading = false;
+  receivedCode = '';
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private http: HttpClient
+  ) {}
 
   onSendCode() {
     this.errorMessage = '';
@@ -39,12 +44,20 @@ export class ForgotPasswordComponent {
 
     this.isLoading = true;
 
-    // Simulation d'envoi de code (à remplacer par un vrai appel API)
-    setTimeout(() => {
-      this.isLoading = false;
-      this.successMessage = 'Un code de vérification a été envoyé à votre email';
-      this.step = 'code';
-    }, 1500);
+    // Appel API pour envoyer le code de vérification
+    this.http.post('http://localhost:8081/api/auth/send-verification-code', { email: this.email })
+      .subscribe({
+        next: (response: any) => {
+          this.isLoading = false;
+          this.receivedCode = response.code; // Pour la démo, on stocke le code
+          this.successMessage = `Un code de vérification a été envoyé à votre email. Code: ${response.code}`;
+          this.step = 'code';
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage = error.error?.message || 'Erreur lors de l\'envoi du code';
+        }
+      });
   }
 
   onVerifyCode() {
@@ -63,13 +76,22 @@ export class ForgotPasswordComponent {
 
     this.isLoading = true;
 
-    // Simulation de vérification (à remplacer par un vrai appel API)
-    setTimeout(() => {
-      this.isLoading = false;
-      // Pour la démo, on accepte n'importe quel code
-      this.successMessage = 'Code vérifié avec succès';
-      this.step = 'reset';
-    }, 1000);
+    // Appel API pour vérifier le code
+    this.http.post('http://localhost:8081/api/auth/verify-code', { 
+      email: this.email, 
+      code: this.verificationCode 
+    })
+      .subscribe({
+        next: (response: any) => {
+          this.isLoading = false;
+          this.successMessage = 'Code vérifié avec succès';
+          this.step = 'reset';
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage = error.error?.message || 'Code de vérification invalide';
+        }
+      });
   }
 
   onResetPassword() {
@@ -93,11 +115,22 @@ export class ForgotPasswordComponent {
 
     this.isLoading = true;
 
-    // Simulation de réinitialisation (à remplacer par un vrai appel API)
-    setTimeout(() => {
-      this.isLoading = false;
-      this.step = 'success';
-    }, 1500);
+    // Appel API pour réinitialiser le mot de passe
+    this.http.post('http://localhost:8081/api/auth/reset-password', {
+      email: this.email,
+      verificationCode: this.verificationCode,
+      newPassword: this.newPassword
+    })
+      .subscribe({
+        next: (response: any) => {
+          this.isLoading = false;
+          this.step = 'success';
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage = error.error?.message || 'Erreur lors de la réinitialisation du mot de passe';
+        }
+      });
   }
 
   goToLogin() {
@@ -108,9 +141,17 @@ export class ForgotPasswordComponent {
     this.errorMessage = '';
     this.isLoading = true;
 
-    setTimeout(() => {
-      this.isLoading = false;
-      this.successMessage = 'Un nouveau code a été envoyé à votre email';
-    }, 1000);
+    this.http.post('http://localhost:8081/api/auth/send-verification-code', { email: this.email })
+      .subscribe({
+        next: (response: any) => {
+          this.isLoading = false;
+          this.receivedCode = response.code;
+          this.successMessage = `Un nouveau code a été envoyé à votre email. Code: ${response.code}`;
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage = error.error?.message || 'Erreur lors de l\'envoi du code';
+        }
+      });
   }
 }

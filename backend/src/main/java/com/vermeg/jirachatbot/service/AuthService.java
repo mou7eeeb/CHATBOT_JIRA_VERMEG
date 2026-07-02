@@ -1,7 +1,10 @@
 package com.vermeg.jirachatbot.service;
 
+import com.vermeg.jirachatbot.dto.CheckEmailRequest;
+import com.vermeg.jirachatbot.dto.CheckEmailResponse;
 import com.vermeg.jirachatbot.dto.JwtResponse;
 import com.vermeg.jirachatbot.dto.LoginRequest;
+import com.vermeg.jirachatbot.dto.PasswordResetRequest;
 import com.vermeg.jirachatbot.dto.SignupRequest;
 import com.vermeg.jirachatbot.entity.User;
 import com.vermeg.jirachatbot.repository.UserRepository;
@@ -18,6 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -28,6 +35,10 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
+    
+    // Stockage en mémoire des codes de vérification (email -> code)
+    private final Map<String, String> verificationCodes = new ConcurrentHashMap<>();
+    private final Random random = new Random();
     
     @Transactional
     public JwtResponse signup(SignupRequest request) {
@@ -92,5 +103,59 @@ public class AuthService {
                 user.getLastName(),
                 user.getRole().name()
         );
+    }
+    
+    public CheckEmailResponse checkEmailExists(CheckEmailRequest request) {
+        boolean exists = userRepository.existsByEmail(request.getEmail());
+        if (exists) {
+            log.info("Email check: {} exists", request.getEmail());
+            return CheckEmailResponse.exists();
+        } else {
+            log.info("Email check: {} does not exist", request.getEmail());
+            return CheckEmailResponse.notExists();
+        }
+    }
+    
+    public String generateAndSendVerificationCode(String email) {
+        // Générer un code à 6 chiffres
+        String code = String.format("%06d", random.nextInt(1000000));
+        
+        // Stocker le code en mémoire
+        verificationCodes.put(email, code);
+        
+        log.info("Verification code generated for {}: {}", email, code);
+        
+        // Ici, vous pouvez ajouter l'envoi réel de l'email
+        // Pour l'instant, on retourne le code pour la démo
+        return code;
+    }
+    
+    public boolean verifyCode(String email, String code) {
+        String storedCode = verificationCodes.get(email);
+        if (storedCode != null && storedCode.equals(code)) {
+            log.info("Code verified successfully for {}", email);
+            return true;
+        }
+        log.warn("Invalid code verification attempt for {}", email);
+        return false;
+    }
+    
+    @Transactional
+    public void resetPassword(PasswordResetRequest request) {
+        if (!verifyCode(request.getEmail(), request.getVerificationCode())) {
+            throw new RuntimeException("Invalid verification code");
+        }
+        
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        
+        // Supprimer le code après utilisation
+        verificationCodes.remove(request.getEmail());
+        
+        log.info("Password reset successfully for {}", request.getEmail());
     }
 }

@@ -1,13 +1,15 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './components/login/login.component';
-import { SignupComponent } from './components/signup/signup.component';
+import { AuthSwitchComponent } from './components/auth/auth-switch.component';
+import { ForgotPasswordComponent } from './components/auth/forgot-password.component';
 import { AuthGuard } from './guards/auth.guard';
 import { AdminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
-  { path: 'signup', component: SignupComponent },
+  { path: '', redirectTo: '/auth', pathMatch: 'full' },
+  { path: 'auth', component: AuthSwitchComponent },
+  { path: 'login', redirectTo: '/auth', pathMatch: 'full' },
+  { path: 'signup', redirectTo: '/auth', pathMatch: 'full' },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
   { 
     path: 'dashboard', 
     loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent),

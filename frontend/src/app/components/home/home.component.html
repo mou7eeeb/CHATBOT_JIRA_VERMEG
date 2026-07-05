@@ -1,0 +1,311 @@
+<!-- ============ NAVBAR ============ -->
+<nav class="navbar" [class.scrolled]="isScrolled">
+  <div class="navbar-inner">
+    <div class="navbar-logo">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+      </div>
+      <span>AI Jira Chatbot</span>
+    </div>
+
+    <div class="navbar-links" [class.open]="mobileMenuOpen">
+      <a (click)="scrollToSection('hero')">Home</a>
+      <a (click)="scrollToSection('features')">Features</a>
+      <a (click)="scrollToSection('showcase')">AI</a>
+      <a (click)="scrollToSection('showcase')">Jira Integration</a>
+      <a (click)="scrollToSection('how-it-works')">How it Works</a>
+      <a class="disabled-link">Pricing <span class="soon-badge">Soon</span></a>
+      <a (click)="scrollToSection('about')">About</a>
+      <a (click)="scrollToSection('footer')">Contact</a>
+
+      <div class="navbar-actions mobile-only">
+        <button class="btn btn-ghost" (click)="goToSignIn()">Sign In</button>
+        <button class="btn btn-primary" (click)="goToSignUp()">Get Started</button>
+      </div>
+    </div>
+
+    <div class="navbar-actions">
+      <button class="theme-toggle" (click)="toggleDarkMode()" aria-label="Toggle dark mode">
+        <svg *ngIf="!isDarkMode" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"></circle>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+        </svg>
+        <svg *ngIf="isDarkMode" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+        </svg>
+      </button>
+      <button class="btn btn-ghost desktop-only" (click)="goToSignIn()">Sign In</button>
+      <button class="btn btn-primary desktop-only" (click)="goToSignUp()">Get Started</button>
+
+      <button class="burger" (click)="toggleMobileMenu()" [class.open]="mobileMenuOpen" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main class="landing">
+
+  <!-- ============ HERO SECTION ============ -->
+  <section id="hero" class="hero">
+    <div class="hero-bg">
+      <div class="glow glow-1"></div>
+      <div class="glow glow-2"></div>
+      <div class="glow glow-3"></div>
+      <div class="grid-overlay"></div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-left">
+        <div class="badge fade-in-up">
+          <span class="badge-emoji">🚀</span>
+          AI + Jira Powered Platform
+        </div>
+
+        <h1 class="hero-title fade-in-up delay-1">
+          The Smartest <span class="gradient-text">AI Assistant</span> for Jira
+        </h1>
+
+        <p class="hero-subtitle fade-in-up delay-2">
+          Search Jira tickets in natural language. Generate JQL automatically.
+          Analyze tickets instantly. Increase productivity with AI.
+        </p>
+
+        <div class="hero-buttons fade-in-up delay-3">
+          <button class="btn btn-primary btn-lg ripple" (click)="goToSignUp()">
+            Get Started
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+          </button>
+          <button class="btn btn-ghost btn-lg" (click)="goToSignIn()">Sign In</button>
+          <button class="btn btn-outline btn-lg ripple">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            Watch Demo
+          </button>
+        </div>
+
+        <div class="hero-checks fade-in-up delay-4">
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"></path></svg> AI Powered</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"></path></svg> Secure</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"></path></svg> Fast</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"></path></svg> Multi Jira Accounts</span>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="floating-chip chip-jira">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.53 2c0 2.2-.9 4.19-2.35 5.65C7.72 9.1 5.73 10 3.53 10v11.5L11.53 14l8 7.5V10c-2.2 0-4.19-.9-5.65-2.35A7.98 7.98 0 0111.53 2z"></path></svg>
+          <span>Jira Connected</span>
+        </div>
+        <div class="floating-chip chip-ai">
+          <span class="pulse-dot"></span>
+          <span>AI Engine Active</span>
+        </div>
+
+        <div class="chatbot-mockup">
+          <div class="mockup-header">
+            <div class="mockup-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="mockup-title">AI Jira Assistant</span>
+          </div>
+
+          <div class="mockup-body">
+            <div class="chat-bubble user-bubble" *ngIf="displayedUserMessage">
+              {{ displayedUserMessage }}<span class="cursor-blink" *ngIf="displayedUserMessage.length < userMessage.length">|</span>
+            </div>
+
+            <div class="chat-bubble bot-bubble" *ngIf="showBotTyping">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+
+            <div class="chat-bubble bot-bubble" *ngIf="displayedBotMessage">
+              {{ displayedBotMessage }}<span class="cursor-blink" *ngIf="displayedBotMessage.length < botMessage.length">|</span>
+            </div>
+
+            <div class="ticket-results" *ngIf="showTicketCards">
+              <div class="ticket-card" *ngFor="let ticket of ticketCards; let i = index" [style.animation-delay]="(i * 0.12) + 's'">
+                <div class="ticket-card-top">
+                  <span class="ticket-id">{{ ticket.id }}</span>
+                  <span class="ticket-priority" [style.background]="ticket.priorityColor + '22'" [style.color]="ticket.priorityColor">{{ ticket.priority }}</span>
+                </div>
+                <p class="ticket-title">{{ ticket.title }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sparkle sparkle-1"></div>
+        <div class="sparkle sparkle-2"></div>
+        <div class="sparkle sparkle-3"></div>
+      </div>
+    </div>
+
+    <div class="scroll-indicator">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"></path></svg>
+    </div>
+  </section>
+
+  <!-- ============ COMPANIES SECTION ============ -->
+  <section class="companies">
+    <p class="companies-label">Trusted by modern engineering teams</p>
+    <div class="companies-track">
+      <div class="company-logo" *ngFor="let c of companies">{{ c.name }}</div>
+      <div class="company-logo" *ngFor="let c of companies">{{ c.name }}</div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES SECTION ============ -->
+  <section id="features" class="features">
+    <div class="section-header">
+      <span class="section-tag">Features</span>
+      <h2 class="section-title">Everything you need to master Jira with AI</h2>
+      <p class="section-subtitle">A complete enterprise toolkit built for speed, security and intelligence.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card" *ngFor="let f of features">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path [attr.d]="f.icon"></path>
+          </svg>
+        </div>
+        <h3>{{ f.title }}</h3>
+        <p>{{ f.description }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section id="how-it-works" class="how-it-works">
+    <div class="section-header">
+      <span class="section-tag">Workflow</span>
+      <h2 class="section-title">How it works</h2>
+      <p class="section-subtitle">From question to answer in five intelligent steps.</p>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-line"></div>
+      <div class="timeline-step" *ngFor="let step of steps; let i = index" [class.reverse]="i % 2 === 1">
+        <div class="timeline-marker">{{ step.number }}</div>
+        <div class="timeline-content">
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.description }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AI + JIRA SHOWCASE ============ -->
+  <section id="showcase" class="showcase">
+    <div class="showcase-left">
+      <span class="section-tag">Integration</span>
+      <h2 class="section-title">Deeply integrated with Jira</h2>
+      <p class="section-subtitle">Connect any Jira Cloud instance and let AI understand your projects, issues and workflows instantly.</p>
+
+      <div class="jira-illustration">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.53 2c0 2.2-.9 4.19-2.35 5.65C7.72 9.1 5.73 10 3.53 10v11.5L11.53 14l8 7.5V10c-2.2 0-4.19-.9-5.65-2.35A7.98 7.98 0 0111.53 2z"></path>
+        </svg>
+        <div class="illustration-ring ring-1"></div>
+        <div class="illustration-ring ring-2"></div>
+      </div>
+    </div>
+
+    <div class="showcase-right">
+      <div class="showcase-card">
+        <div class="showcase-card-header">
+          <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+        </div>
+        <div class="showcase-jql">
+          <span class="jql-label">Generated JQL</span>
+          <code>project = "CRM" AND priority = "Critical" AND status != "Done" ORDER BY created DESC</code>
+        </div>
+        <div class="showcase-results">
+          <div class="result-row" *ngFor="let ticket of ticketCards">
+            <span class="result-id">{{ ticket.id }}</span>
+            <span class="result-title">{{ ticket.title }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATISTICS ============ -->
+  <section id="statistics" class="statistics">
+    <div class="stats-grid">
+      <div class="stat-item" *ngFor="let stat of stats">
+        <div class="stat-value">{{ formatStat(stat) }}{{ stat.suffix }}</div>
+        <div class="stat-label">{{ stat.label }}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CALL TO ACTION ============ -->
+  <section class="cta">
+    <div class="cta-bg">
+      <div class="glow glow-cta"></div>
+    </div>
+    <h2>Ready to revolutionize Jira with AI?</h2>
+    <p>Join modern engineering teams already saving hours every week.</p>
+    <div class="cta-buttons">
+      <button class="btn btn-primary btn-lg ripple" (click)="goToSignUp()">Start Now</button>
+      <button class="btn btn-outline-light btn-lg" (click)="goToSignIn()">Login</button>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer id="footer" class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="navbar-logo">
+          <div class="logo-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <span>AI Jira Chatbot</span>
+        </div>
+        <p>The smartest AI assistant for Jira. Search, analyze and understand your tickets instantly.</p>
+      </div>
+
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a>Documentation</a>
+          <a>Features</a>
+          <a>Pricing</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a>About</a>
+          <a>Contact</a>
+          <a>GitHub</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a>Privacy Policy</a>
+          <a>Terms</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 AI Jira Chatbot. All rights reserved.</p>
+      <div class="social-icons">
+        <a class="social-icon" aria-label="GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.03A9.6 9.6 0 0112 6.8c.85 0 1.7.11 2.5.33 1.91-1.3 2.75-1.03 2.75-1.03.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10.02 10.02 0 0022 12c0-5.52-4.48-10-10-10z"></path></svg>
+        </a>
+        <a class="social-icon" aria-label="Twitter">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg>
+        </a>
+        <a class="social-icon" aria-label="LinkedIn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path><circle cx="4" cy="4" r="2"></circle></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+</main>

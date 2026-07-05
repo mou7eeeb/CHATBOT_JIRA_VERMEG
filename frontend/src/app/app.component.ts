@@ -21,6 +21,6 @@ export class AppComponent {
 
   get isAuthPage(): boolean {
     const url = this.router.url;
-    return url.includes('/login') || url.includes('/signup') || url.includes('/auth') || url.includes('/forgot-password');
+    return url === '/' || url.includes('/login') || url.includes('/signup') || url.includes('/auth') || url.includes('/forgot-password');
   }
 }

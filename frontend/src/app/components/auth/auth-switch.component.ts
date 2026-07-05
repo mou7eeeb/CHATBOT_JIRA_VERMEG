@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -11,7 +11,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './auth-switch.component.html',
   styleUrls: ['./auth-switch.component.css']
 })
-export class AuthSwitchComponent {
+export class AuthSwitchComponent implements OnInit {
   isSignIn = true;
   
   // Sign In form
@@ -31,8 +31,16 @@ export class AuthSwitchComponent {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
+
+  ngOnInit(): void {
+    const mode = this.route.snapshot.queryParamMap.get('mode');
+    if (mode === 'signup') {
+      this.isSignIn = false;
+    }
+  }
 
   toggleMode() {
     this.isSignIn = !this.isSignIn;

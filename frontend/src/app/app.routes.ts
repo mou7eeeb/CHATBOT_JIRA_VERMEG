@@ -1,11 +1,12 @@
 import { Routes } from '@angular/router';
+import { HomeComponent } from './components/home/home.component';
 import { AuthSwitchComponent } from './components/auth/auth-switch.component';
 import { ForgotPasswordComponent } from './components/auth/forgot-password.component';
 import { AuthGuard } from './guards/auth.guard';
 import { AdminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/auth', pathMatch: 'full' },
+  { path: '', component: HomeComponent },
   { path: 'auth', component: AuthSwitchComponent },
   { path: 'login', redirectTo: '/auth', pathMatch: 'full' },
   { path: 'signup', redirectTo: '/auth', pathMatch: 'full' },
@@ -35,5 +36,5 @@ export const routes: Routes = [
     loadComponent: () => import('./components/admin/admin-users/admin-users.component').then(m => m.AdminUsersComponent),
     canActivate: [AuthGuard, AdminGuard]
   },
-  { path: '**', redirectTo: '/login' }
+  { path: '**', redirectTo: '/' }
 ];

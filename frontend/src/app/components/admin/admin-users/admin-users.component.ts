@@ -30,6 +30,24 @@ export class AdminUsersComponent implements OnInit {
     this.loadUsers();
   }
 
+  get totalUsersCount(): number {
+    return this.users.length;
+  }
+
+  get activeUsersCount(): number {
+    return this.users.filter(u => u.enabled).length;
+  }
+
+  get adminUsersCount(): number {
+    return this.users.filter(u => u.role === 'ADMIN').length;
+  }
+
+  getUserInitials(user: User): string {
+    const first = user.firstName?.[0] || '';
+    const last = user.lastName?.[0] || '';
+    return `${first}${last}`.toUpperCase();
+  }
+
   loadUsers(): void {
     this.loading = true;
     this.error = null;

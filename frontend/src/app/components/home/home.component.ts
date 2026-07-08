@@ -126,6 +126,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     { value: 10, suffix: 'x', label: 'Faster Search', current: 0 }
   ];
 
+  author = {
+    name: 'Mouheb Sayadi',
+    phone: '24025287',
+    position: 'Stagiaire',
+    company: 'Vermeg',
+    education: 'Étudiant en 3ème année Cycle Ingénieur',
+    specialization: 'Intelligence Artificielle et Data Science',
+    github: 'https://github.com/mou7eeeb'
+  };
+
   private statsAnimated = false;
   private typingTimeouts: any[] = [];
 

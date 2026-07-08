@@ -36,6 +36,7 @@ public class ChatSession {
     private String title;
     
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
     
     @CreationTimestamp

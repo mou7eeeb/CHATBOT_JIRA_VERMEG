@@ -102,6 +102,19 @@ export class ChatbotComponent implements OnInit {
     });
   }
 
+  handleEnterKey(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key === 'Enter' && !keyboardEvent.shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
+    }
+  }
+
+  autoResize(textarea: HTMLTextAreaElement): void {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+  }
+
   getFilteredTickets(tickets: JiraTicket[] | undefined): JiraTicket[] {
     if (!tickets) return [];
     if (this.selectedStatus === 'all') return tickets;

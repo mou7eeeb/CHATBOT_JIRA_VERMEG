@@ -39,9 +39,11 @@ public class JiraConnection {
     private String jiraApiToken;
     
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isDefault = false;
     
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
     
     private LocalDateTime lastTestedAt;

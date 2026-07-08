@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { JiraConnectionService } from '../../services/jira-connection.service';
+import { AdminService, DashboardStats } from '../../services/admin.service';
 import { User } from '../../models/auth.model';
 import { JiraConnectionResponse } from '../../models/jira-connection.model';
 
@@ -17,17 +18,40 @@ export class DashboardComponent implements OnInit {
   currentUser: User | null = null;
   jiraConnections: JiraConnectionResponse[] = [];
   loading = true;
-  sidebarCollapsed = false;
+  adminStats: DashboardStats | null = null;
+  adminStatsLoading = false;
 
   constructor(
     private authService: AuthService,
     private jiraConnectionService: JiraConnectionService,
+    private adminService: AdminService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;
     this.loadJiraConnections();
+    if (this.isAdmin) {
+      this.loadAdminStats();
+    }
+  }
+
+  loadAdminStats(): void {
+    this.adminStatsLoading = true;
+    this.adminService.getDashboardStats().subscribe({
+      next: (stats) => {
+        this.adminStats = stats;
+        this.adminStatsLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading admin stats:', error);
+        this.adminStatsLoading = false;
+      }
+    });
+  }
+
+  get isAdmin(): boolean {
+    return this.currentUser?.role === 'ADMIN';
   }
 
   loadJiraConnections(): void {
@@ -54,8 +78,8 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  toggleSidebar(): void {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
+  get activeConnectionsCount(): number {
+    return this.jiraConnections.filter(c => c.isActive).length;
   }
 
   get userInitials(): string {

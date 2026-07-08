@@ -53,12 +53,15 @@ public class AIService {
             
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
             
+            @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(openAIConfig.getUrl(), entity, Map.class);
             
             if (response != null && response.containsKey("choices")) {
+                @SuppressWarnings("unchecked")
                 List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
                 if (!choices.isEmpty()) {
                     Map<String, Object> choice = choices.get(0);
+                    @SuppressWarnings("unchecked")
                     Map<String, String> message = (Map<String, String>) choice.get("message");
                     String jql = message.get("content").trim();
                     log.info("OpenAI generated JQL: {}", jql);

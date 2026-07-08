@@ -1,7 +1,4 @@
-<div class="page-layout">
-  <app-sidebar></app-sidebar>
-  
-  <div class="chat-container">
+<div class="chat-container">
     <div class="chat-header">
       <div class="header-content">
         <div class="header-title">
@@ -82,24 +79,34 @@
 
   <div class="chat-input-container">
     <div class="input-wrapper">
-      <input 
-        type="text" 
+      <button class="attachment-btn" title="Attach file (coming soon)" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+        </svg>
+      </button>
+      <textarea 
         [(ngModel)]="userInput"
-        (keyup.enter)="sendMessage()"
+        (keydown.enter)="handleEnterKey($event)"
         [disabled]="isLoading"
-        placeholder="Ask about Jira tickets... (e.g., 'show me open bugs in CRM')"
+        placeholder="Message Claude..."
         class="chat-input"
-      />
+        rows="1"
+        #chatInput
+        (input)="autoResize(chatInput)"
+      ></textarea>
       <button 
         (click)="sendMessage()" 
         [disabled]="!userInput.trim() || isLoading"
         class="send-btn"
+        [class.show-send]="userInput.trim()"
         title="Send message">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
       </button>
     </div>
+    <div class="input-footer">
+      <span class="input-hint">Claude can make mistakes. Please double-check responses.</span>
+    </div>
   </div>
 </div>
-  </div>

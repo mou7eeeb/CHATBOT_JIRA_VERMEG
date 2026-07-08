@@ -1,0 +1,10 @@
+target/
+*.jar
+*.class
+.mvn/
+mvnw
+mvnw.cmd
+.git/
+.gitignore
+README.md
+.DS_Store

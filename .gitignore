@@ -31,6 +31,7 @@ frontend/*.spec.ts
 **/.env.*.local
 **/application-local.properties
 **/application-dev.properties
+**/application-secrets.properties
 
 # IDE
 .idea/

@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,12 +29,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
-    
+    private final EmailService emailService;
+
     // Stockage en mémoire des codes de vérification (email -> code)
     private final Map<String, String> verificationCodes = new ConcurrentHashMap<>();
     private final Random random = new Random();
@@ -119,14 +119,15 @@ public class AuthService {
     public String generateAndSendVerificationCode(String email) {
         // Générer un code à 6 chiffres
         String code = String.format("%06d", random.nextInt(1000000));
-        
+
         // Stocker le code en mémoire
         verificationCodes.put(email, code);
-        
-        log.info("Verification code generated for {}: {}", email, code);
-        
-        // Ici, vous pouvez ajouter l'envoi réel de l'email
-        // Pour l'instant, on retourne le code pour la démo
+
+        // Envoyer le code par email via EmailService
+        emailService.sendVerificationCode(email, code);
+
+        log.info("Verification code generated and sent to {}", email);
+
         return code;
     }
     

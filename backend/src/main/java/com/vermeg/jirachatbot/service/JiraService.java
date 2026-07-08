@@ -40,6 +40,7 @@ public class JiraService {
             
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
             
+            @SuppressWarnings("rawtypes")
             ResponseEntity<Map> response = restTemplate.exchange(
                 jiraConfig.getApiUrl(),
                 HttpMethod.POST,
@@ -48,6 +49,7 @@ public class JiraService {
             );
             
             if (response.getBody() != null && response.getBody().containsKey("issues")) {
+                @SuppressWarnings("unchecked")
                 List<Map<String, Object>> issues = (List<Map<String, Object>>) response.getBody().get("issues");
                 List<JiraTicket> tickets = issues.stream()
                     .map(issue -> objectMapper.convertValue(issue, JiraTicket.class))

@@ -26,11 +26,7 @@ export const routes: Routes = [
     loadComponent: () => import('./components/chatbot/chatbot.component').then(m => m.ChatbotComponent),
     canActivate: [AuthGuard]
   },
-  {
-    path: 'admin',
-    loadComponent: () => import('./components/admin/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
-    canActivate: [AuthGuard, AdminGuard]
-  },
+  { path: 'admin', redirectTo: '/dashboard', pathMatch: 'full' },
   {
     path: 'admin/users',
     loadComponent: () => import('./components/admin/admin-users/admin-users.component').then(m => m.AdminUsersComponent),

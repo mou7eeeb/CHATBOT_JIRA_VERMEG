@@ -6,21 +6,74 @@
       <p class="subtitle">Manage all users in the system</p>
     </div>
     <button class="btn-primary" (click)="openCreateModal()">
-      <span class="icon">➕</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="16"></line>
+        <line x1="8" y1="12" x2="16" y2="12"></line>
+      </svg>
       Add New User
     </button>
   </div>
 
-  <!-- Search Bar -->
-  <div class="search-bar">
-    <input 
-      type="text" 
-      [(ngModel)]="searchTerm" 
-      (input)="filterUsers()"
-      placeholder="Search by name or email..."
-      class="search-input"
-    />
-    <span class="search-icon">🔍</span>
+  <!-- Stats Overview -->
+  <div class="stats-row" *ngIf="!loading && !error">
+    <div class="stat-card">
+      <div class="stat-icon total">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <h3>{{ totalUsersCount }}</h3>
+        <p>Total Users</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon active">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <h3>{{ activeUsersCount }}</h3>
+        <p>Active Users</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon admin">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <h3>{{ adminUsersCount }}</h3>
+        <p>Administrators</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar" *ngIf="!loading && !error">
+    <div class="search-bar">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="filterUsers()"
+        placeholder="Search by name or email..."
+        class="search-input"
+      />
+    </div>
+    <div class="toolbar-count">{{ filteredUsers.length }} user(s)</div>
   </div>
 
   <!-- Loading State -->
@@ -41,62 +94,73 @@
     <table class="users-table">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Email</th>
+          <th>User</th>
           <th>Role</th>
           <th>Status</th>
           <th>Created</th>
-          <th>Actions</th>
+          <th class="actions-col">Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let user of filteredUsers">
-          <td>{{ user.id }}</td>
-          <td>{{ user.firstName }} {{ user.lastName }}</td>
-          <td>{{ user.email }}</td>
           <td>
-            <select 
-              [value]="user.role" 
-              (change)="changeUserRole(user, $any($event.target).value)"
-              class="role-select"
-              [class.admin-role]="user.role === 'ADMIN'"
-            >
-              <option value="USER">USER</option>
-              <option value="ADMIN">ADMIN</option>
-            </select>
+            <div class="user-cell">
+              <div class="user-avatar">{{ getUserInitials(user) }}</div>
+              <div class="user-meta">
+                <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+                <span class="user-email">{{ user.email }}</span>
+              </div>
+            </div>
           </td>
           <td>
-            <span 
-              class="status-badge" 
+            <span class="role-badge" [class.admin-role]="user.role === 'ADMIN'">
+              {{ user.role }}
+            </span>
+          </td>
+          <td>
+            <span
+              class="status-badge"
               [class.active]="user.enabled"
               [class.inactive]="!user.enabled"
             >
+              <span class="status-dot"></span>
               {{ user.enabled ? 'Active' : 'Inactive' }}
             </span>
           </td>
-          <td>{{ user.createdAt | date:'short' }}</td>
+          <td class="date-cell">{{ user.createdAt | date:'mediumDate' }}</td>
           <td class="actions">
-            <button 
-              class="btn-icon edit" 
+            <button
+              class="btn-icon edit"
               (click)="openEditModal(user)"
               title="Edit"
             >
-              ✏️
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
             </button>
-            <button 
-              class="btn-icon toggle" 
+            <button
+              class="btn-icon toggle"
               (click)="toggleUserStatus(user)"
               [title]="user.enabled ? 'Disable' : 'Enable'"
             >
-              {{ user.enabled ? '⏸️' : '▶️' }}
+              <svg *ngIf="user.enabled" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+              </svg>
+              <svg *ngIf="!user.enabled" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
             </button>
-            <button 
-              class="btn-icon delete" 
+            <button
+              class="btn-icon delete"
               (click)="confirmDelete(user)"
               title="Delete"
             >
-              🗑️
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
             </button>
           </td>
         </tr>

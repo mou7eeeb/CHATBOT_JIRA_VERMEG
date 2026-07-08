@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jira-chatbot-backend
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:jirachatbot
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    networks:
+      - jira-chatbot-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: jira-chatbot-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - jira-chatbot-network
+
+networks:
+  jira-chatbot-network:
+    driver: bridge

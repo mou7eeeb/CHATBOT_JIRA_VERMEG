@@ -52,5 +52,6 @@ public class SavedSearch {
     
     private LocalDateTime lastUsedAt;
     
+    @Builder.Default
     private Integer usageCount = 0;
 }

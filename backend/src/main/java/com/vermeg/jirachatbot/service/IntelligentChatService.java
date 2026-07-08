@@ -1,6 +1,6 @@
 package com.vermeg.jirachatbot.service;
 
-import com.vermeg.jirachatbot.config.OpenAIConfig;
+import com.vermeg.jirachatbot.config.GoogleAIConfig;
 import com.vermeg.jirachatbot.model.ChatRequest;
 import com.vermeg.jirachatbot.model.ChatResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,15 +21,28 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class IntelligentChatService {
     
-    private final OpenAIConfig openAIConfig;
+    private final GoogleAIConfig googleAIConfig;
     private final RestTemplate restTemplate = new RestTemplate();
     
     public ChatResponse chat(ChatRequest request) {
         log.info("Processing intelligent chat message: {}", request.getMessage());
-        
+        log.info("Google AI Config - Key: {}, URL: {}, Model: {}",
+            googleAIConfig.getKey() != null ? googleAIConfig.getKey().substring(0, Math.min(10, googleAIConfig.getKey().length())) + "..." : "null",
+            googleAIConfig.getUrl(),
+            googleAIConfig.getModel());
+        log.info("Google AI is configured: {}", googleAIConfig.isConfigured());
+
         try {
-            // Réponse intelligente simulée - Mode démo
-            String response = generateSmartResponse(request.getMessage());
+            String response;
+
+            // Use Google AI API if configured, otherwise fall back to demo mode
+            if (googleAIConfig.isConfigured()) {
+                log.info("Google AI is configured, using real AI response");
+                response = getAIResponse(request.getMessage());
+            } else {
+                log.info("Google AI not configured, using demo mode");
+                response = generateSmartResponse(request.getMessage());
+            }
             
             return ChatResponse.builder()
                     .success(true)
@@ -81,64 +94,70 @@ public class IntelligentChatService {
     
     private String getAIResponse(String userMessage) {
         try {
-            log.info("Calling OpenAI API with message: {}", userMessage);
-            log.info("OpenAI API URL: {}", openAIConfig.getUrl());
-            log.info("OpenAI Model: {}", openAIConfig.getModel());
-            
+            log.info("Calling Google AI API with message: {}", userMessage);
+            String urlWithKey = googleAIConfig.getUrl() + "?key=" + googleAIConfig.getKey();
+            log.info("Google AI API URL: {}", urlWithKey);
+            log.info("Google AI Model: {}", googleAIConfig.getModel());
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(openAIConfig.getKey());
-            
+
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", openAIConfig.getModel());
-            
-            List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of(
-                "role", "system",
-                "content", "You are an intelligent AI assistant. You are helpful, friendly, and knowledgeable. " +
-                          "Answer questions clearly and concisely. If you don't know something, say so honestly."
+            requestBody.put("contents", List.of(
+                Map.of("parts", List.of(
+                    Map.of("text", userMessage)
+                ))
             ));
-            messages.add(Map.of(
-                "role", "user",
-                "content", userMessage
+            requestBody.put("generationConfig", Map.of(
+                "temperature", 0.7,
+                "maxOutputTokens", 500
             ));
-            
-            requestBody.put("messages", messages);
-            requestBody.put("temperature", 0.7);
-            requestBody.put("max_tokens", 500);
-            
+
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-            
+
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(
-                openAIConfig.getUrl(), 
-                entity, 
+                urlWithKey,
+                entity,
                 Map.class
             );
-            
-            if (response != null && response.containsKey("choices")) {
+
+            if (response != null && response.containsKey("candidates")) {
                 @SuppressWarnings("unchecked")
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-                if (!choices.isEmpty()) {
-                    Map<String, Object> choice = choices.get(0);
-                    @SuppressWarnings("unchecked")
-                    Map<String, String> message = (Map<String, String>) choice.get("message");
-                    String content = message.get("content").trim();
-                    log.info("AI Response: {}", content);
-                    return content;
+                List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
+                if (!candidates.isEmpty()) {
+                    Map<String, Object> candidate = candidates.get(0);
+                    if (candidate.containsKey("content")) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> content = (Map<String, Object>) candidate.get("content");
+                        if (content.containsKey("parts")) {
+                            @SuppressWarnings("unchecked")
+                            List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
+                            if (!parts.isEmpty()) {
+                                Map<String, Object> part = parts.get(0);
+                                String aiResponse = ((String) part.get("text")).trim();
+                                log.info("AI Response: {}", aiResponse);
+                                return aiResponse;
+                            }
+                        }
+                    }
                 }
             }
-            
+
             return "I'm sorry, I couldn't generate a response. Please try again.";
-            
+
         } catch (org.springframework.web.client.HttpClientErrorException e) {
-            log.error("OpenAI API HTTP Error: Status={}, Body={}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("OpenAI API error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            log.error("Google AI API HTTP Error: Status={}, Body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            if (e.getStatusCode().value() == 429) {
+                log.warn("Google AI quota exceeded, falling back to demo mode");
+                return generateSmartResponse(userMessage);
+            }
+            throw new RuntimeException("Google AI API error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         } catch (org.springframework.web.client.HttpServerErrorException e) {
-            log.error("OpenAI API Server Error: Status={}, Body={}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("OpenAI API server error: " + e.getStatusCode());
+            log.error("Google AI API Server Error: Status={}, Body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("Google AI API server error: " + e.getStatusCode());
         } catch (Exception e) {
-            log.error("Error calling OpenAI API: {}", e.getMessage(), e);
+            log.error("Error calling Google AI API: {}", e.getMessage(), e);
             log.error("Error class: {}", e.getClass().getName());
             if (e.getCause() != null) {
                 log.error("Cause: {}", e.getCause().getMessage());

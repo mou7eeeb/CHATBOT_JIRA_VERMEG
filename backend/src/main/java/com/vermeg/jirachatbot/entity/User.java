@@ -38,18 +38,23 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private Role role = Role.USER;
     
     @Column(nullable = false)
+    @Builder.Default
     private Boolean enabled = true;
     
     @Column(nullable = false)
+    @Builder.Default
     private Boolean accountNonExpired = true;
     
     @Column(nullable = false)
+    @Builder.Default
     private Boolean accountNonLocked = true;
     
     @Column(nullable = false)
+    @Builder.Default
     private Boolean credentialsNonExpired = true;
     
     @CreationTimestamp

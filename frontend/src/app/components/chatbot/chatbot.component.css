@@ -1,8 +1,16 @@
+.chatbot-layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
 .chat-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
   background: white;
+  flex: 1;
+  margin-left: 260px;
 }
 
 .chat-header {
@@ -404,7 +412,12 @@
 }
 
 @media (max-width: 768px) {
+  .chatbot-layout {
+    flex-direction: column;
+  }
+
   .chat-container {
+    margin-left: 0;
     height: 100vh;
     border-radius: 0;
   }
@@ -417,5 +430,9 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  app-sidebar {
+    display: none;
   }
 }

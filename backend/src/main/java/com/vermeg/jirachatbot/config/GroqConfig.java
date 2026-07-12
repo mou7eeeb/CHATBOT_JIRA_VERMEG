@@ -6,14 +6,14 @@ import org.springframework.context.annotation.Configuration;
 
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "google.ai")
-public class GoogleAIConfig {
-    
+@ConfigurationProperties(prefix = "groq.api")
+public class GroqConfig {
+
     private String key;
     private String url;
     private String model;
-    
+
     public boolean isConfigured() {
-        return key != null && !key.isEmpty() && !key.equals("your-google-ai-api-key-here");
+        return key != null && !key.isEmpty() && !key.equals("your-groq-api-key-here");
     }
 }

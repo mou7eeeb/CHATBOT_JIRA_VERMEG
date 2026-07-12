@@ -80,14 +80,19 @@ export class ChatbotComponent implements OnInit {
       },
       error: (error) => {
         this.messages = this.messages.filter(m => !m.isLoading);
-        
+
         let errorText = 'Sorry, I encountered an error. Please try again.';
-        if (error.error && error.error.message) {
-          errorText = error.error.message;
-        } else if (error.message) {
+        console.error('Chat error:', error);
+
+        // Extract error message from various possible sources
+        if (error.message) {
           errorText = error.message;
+        } else if (error.error && error.error.message) {
+          errorText = error.error.message;
+        } else if (typeof error === 'string') {
+          errorText = error;
         }
-        
+
         const errorMessage: ChatMessage = {
           id: this.generateId(),
           text: errorText,

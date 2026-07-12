@@ -1,17 +1,9 @@
 package com.vermeg.jirachatbot.service;
 
-import com.vermeg.jirachatbot.config.OpenAIConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,72 +12,32 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class AIService {
     
-    private final OpenAIConfig openAIConfig;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final GroqService groqService;
     
     public String convertToJQL(String naturalLanguage) {
         log.info("Converting natural language to JQL: {}", naturalLanguage);
         
-        if (openAIConfig.isConfigured()) {
-            return convertWithOpenAI(naturalLanguage);
+        if (groqService.isConfigured()) {
+            return convertWithGroq(naturalLanguage);
         } else {
-            log.info("OpenAI not configured, using rule-based fallback");
+            log.info("Groq not configured, using rule-based fallback");
             return convertWithRules(naturalLanguage);
         }
     }
     
-    private String convertWithOpenAI(String naturalLanguage) {
+    private String convertWithGroq(String naturalLanguage) {
         try {
-            String prompt = buildPrompt(naturalLanguage);
-            
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(openAIConfig.getKey());
-            
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", openAIConfig.getModel());
-            requestBody.put("messages", new Object[]{
-                Map.of("role", "system", "content", "You are a JQL query generator. Convert natural language questions about Jira tickets into JQL (Jira Query Language). Return ONLY the JQL query, no explanations."),
-                Map.of("role", "user", "content", prompt)
-            });
-            requestBody.put("temperature", 0.3);
-            requestBody.put("max_tokens", 150);
-            
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-            
-            @SuppressWarnings("unchecked")
-            Map<String, Object> response = restTemplate.postForObject(openAIConfig.getUrl(), entity, Map.class);
-            
-            if (response != null && response.containsKey("choices")) {
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-                if (!choices.isEmpty()) {
-                    Map<String, Object> choice = choices.get(0);
-                    @SuppressWarnings("unchecked")
-                    Map<String, String> message = (Map<String, String>) choice.get("message");
-                    String jql = message.get("content").trim();
-                    log.info("OpenAI generated JQL: {}", jql);
-                    return jql;
-                }
+            String jql = groqService.generateJQL(naturalLanguage);
+            if (jql == null || jql.isBlank()) {
+                log.warn("Groq returned an empty JQL, falling back to rule-based system");
+                return convertWithRules(naturalLanguage);
             }
-            
-            log.warn("OpenAI API call failed, falling back to rule-based system");
-            return convertWithRules(naturalLanguage);
-            
+            log.info("Groq generated JQL: {}", jql);
+            return jql;
         } catch (Exception e) {
-            log.error("Error calling OpenAI API: {}", e.getMessage());
+            log.error("Error calling Groq API: {}", e.getMessage());
             return convertWithRules(naturalLanguage);
         }
-    }
-    
-    private String buildPrompt(String naturalLanguage) {
-        return "Convert this question to JQL: \"" + naturalLanguage + "\"\n" +
-               "Examples:\n" +
-               "- \"show me open bugs in CRM\" -> \"project = CRM AND issuetype = Bug AND status != Done\"\n" +
-               "- \"all high priority issues\" -> \"priority = High\"\n" +
-               "- \"issues assigned to john\" -> \"assignee = john\"\n" +
-               "- \"my open tasks\" -> \"assignee = currentUser() AND status != Done\"\n" +
-               "Return ONLY the JQL query.";
     }
     
     private String convertWithRules(String naturalLanguage) {

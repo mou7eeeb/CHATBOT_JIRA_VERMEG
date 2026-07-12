@@ -51,13 +51,18 @@ export class ChatService {
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'An error occurred';
-    
+
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      errorMessage = `Server returned code ${error.status}: ${error.message}`;
+      // Try to extract error message from backend response
+      if (error.error && error.error.message) {
+        errorMessage = error.error.message;
+      } else {
+        errorMessage = `Server returned code ${error.status}: ${error.message}`;
+      }
     }
-    
+
     console.error(errorMessage);
     return throwError(() => new Error(errorMessage));
   }

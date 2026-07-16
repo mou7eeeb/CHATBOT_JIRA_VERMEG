@@ -1,0 +1,72 @@
+<div class="jira-issues-container" *ngIf="tickets && tickets.length > 0">
+  <div class="issues-table-wrapper">
+    <table class="issues-table">
+      <thead>
+        <tr>
+          <th>Clé</th>
+          <th>Résumé</th>
+          <th>Statut</th>
+          <th>Priorité</th>
+          <th>Assigné à</th>
+          <th>Type</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ticket of tickets">
+          <td class="ticket-key">{{ ticket.key }}</td>
+          <td class="ticket-summary">{{ ticket.summary }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(ticket.status)">
+              {{ ticket.status }}
+            </span>
+          </td>
+          <td>
+            <span class="priority-badge" [ngClass]="getPriorityClass(ticket.priority)">
+              {{ ticket.priority }}
+            </span>
+          </td>
+          <td class="ticket-assignee">{{ ticket.assignee }}</td>
+          <td class="ticket-type">{{ ticket.issueType }}</td>
+          <td class="ticket-action">
+            <button 
+              class="btn-open-jira" 
+              (click)="openJiraTicket(getTicketUrl(ticket.key))"
+              title="Ouvrir dans Jira">
+              Ouvrir
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile cards view -->
+  <div class="issues-cards-mobile">
+    <div class="issue-card" *ngFor="let ticket of tickets">
+      <div class="card-header">
+        <span class="card-key">{{ ticket.key }}</span>
+        <span class="status-badge" [ngClass]="getStatusClass(ticket.status)">
+          {{ ticket.status }}
+        </span>
+      </div>
+      <div class="card-body">
+        <p class="card-summary">{{ ticket.summary }}</p>
+        <div class="card-meta">
+          <span class="priority-badge" [ngClass]="getPriorityClass(ticket.priority)">
+            {{ ticket.priority }}
+          </span>
+          <span class="card-assignee">{{ ticket.assignee }}</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button 
+          class="btn-open-jira" 
+          (click)="openJiraTicket(getTicketUrl(ticket.key))"
+          title="Ouvrir dans Jira">
+          Ouvrir dans Jira
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

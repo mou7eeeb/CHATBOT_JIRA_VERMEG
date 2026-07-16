@@ -26,6 +26,16 @@ export const routes: Routes = [
     loadComponent: () => import('./components/chatbot/chatbot.component').then(m => m.ChatbotComponent),
     canActivate: [AuthGuard]
   },
+  {
+    path: 'chatbot/:id',
+    loadComponent: () => import('./components/chatbot/chatbot.component').then(m => m.ChatbotComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'conversations',
+    loadComponent: () => import('./components/conversation-list/conversation-list.component').then(m => m.ConversationListComponent),
+    canActivate: [AuthGuard]
+  },
   { path: 'admin', redirectTo: '/dashboard', pathMatch: 'full' },
   {
     path: 'admin/users',

@@ -6,9 +6,11 @@ export interface ChatRequest {
 }
 
 export interface ChatResponse {
+  type: string;
   message: string;
   jqlQuery: string;
   tickets: JiraTicket[];
+  projects: any[];
   totalTickets: number;
   success: boolean;
   error?: string;
@@ -20,6 +22,7 @@ export interface ChatMessage {
   sender: 'user' | 'bot';
   timestamp: Date;
   tickets?: JiraTicket[];
+  projects?: any[];
   jqlQuery?: string;
   isLoading?: boolean;
   error?: boolean;

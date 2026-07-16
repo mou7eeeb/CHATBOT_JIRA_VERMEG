@@ -1,0 +1,44 @@
+<div class="conversation-list">
+  <div class="header">
+    <h2>Conversations</h2>
+    <button class="btn-primary" routerLink="/chatbot">New Conversation</button>
+  </div>
+
+  <div *ngIf="loading" class="loading">Loading conversations...</div>
+
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <div *ngIf="!loading && conversations.length === 0" class="empty">
+    <p>No conversations yet. Start a new conversation!</p>
+  </div>
+
+  <div *ngIf="!loading && conversations.length > 0" class="conversations">
+    <div *ngFor="let conv of conversations" class="conversation-card" [routerLink]="['/chatbot', conv.id]">
+      <div class="conversation-info">
+        <h3>{{ conv.title }}</h3>
+        <p *ngIf="conv.lastMessagePreview" class="preview">{{ conv.lastMessagePreview }}</p>
+        <p class="date">{{ conv.updatedAt | date:'short' }}</p>
+        <p *ngIf="conv.messageCount" class="message-count">
+          {{ conv.messageCount }} messages
+        </p>
+        <p *ngIf="conv.jiraConnectionName" class="connection">Connected to: {{ conv.jiraConnectionName }}</p>
+      </div>
+      <div class="conversation-actions">
+        <button
+          class="btn-rename"
+          type="button"
+          (click)="conv.id !== undefined && renameConversation(conv.id); $event.stopPropagation()"
+          title="Rename conversation">
+          Rename
+        </button>
+        <button
+          class="btn-delete"
+          type="button"
+          (click)="conv.id !== undefined && deleteConversation(conv.id); $event.stopPropagation()"
+          title="Delete conversation">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

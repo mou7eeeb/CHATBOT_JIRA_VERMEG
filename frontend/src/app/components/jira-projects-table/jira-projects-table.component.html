@@ -1,0 +1,53 @@
+<div class="jira-projects-container" *ngIf="projects && projects.length > 0">
+  <div class="projects-table-wrapper">
+    <table class="projects-table">
+      <thead>
+        <tr>
+          <th>Clé</th>
+          <th>Nom du projet</th>
+          <th>Type</th>
+          <th>Responsable</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let project of projects">
+          <td class="project-key">{{ project.key }}</td>
+          <td class="project-name">{{ project.name }}</td>
+          <td class="project-type">{{ project.projectType }}</td>
+          <td class="project-lead">{{ project.lead }}</td>
+          <td class="project-action">
+            <button 
+              class="btn-open-jira" 
+              (click)="openJiraProject(getProjectUrl(project.key))"
+              title="Ouvrir dans Jira">
+              Ouvrir
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile cards view -->
+  <div class="projects-cards-mobile">
+    <div class="project-card" *ngFor="let project of projects">
+      <div class="card-header">
+        <span class="card-key">{{ project.key }}</span>
+        <span class="card-type">{{ project.projectType }}</span>
+      </div>
+      <div class="card-body">
+        <h4 class="card-name">{{ project.name }}</h4>
+        <p class="card-lead">Responsable: {{ project.lead }}</p>
+      </div>
+      <div class="card-footer">
+        <button 
+          class="btn-open-jira" 
+          (click)="openJiraProject(getProjectUrl(project.key))"
+          title="Ouvrir dans Jira">
+          Ouvrir dans Jira
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

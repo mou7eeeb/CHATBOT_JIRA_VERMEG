@@ -1,16 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
+import { ChatSessionService } from '../../services/chat-session.service';
 import { ChatMessage } from '../../models/chat.model';
+import { ChatSession, ChatMessage as ChatSessionMessage } from '../../models/chat-session.model';
 import { JiraTicket } from '../../models/jira-ticket.model';
 import { SidebarComponent } from '../shared/sidebar/sidebar.component';
+import { JiraIssuesTableComponent, JiraTicketDisplay } from '../jira-issues-table/jira-issues-table.component';
+import { JiraProjectsTableComponent, JiraProjectDisplay } from '../jira-projects-table/jira-projects-table.component';
 
 @Component({
   selector: 'app-chatbot',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, JiraIssuesTableComponent, JiraProjectsTableComponent],
   templateUrl: './chatbot.component.html',
   styleUrls: ['./chatbot.component.css']
 })
@@ -19,11 +23,142 @@ export class ChatbotComponent implements OnInit {
   userInput: string = '';
   isLoading: boolean = false;
   selectedStatus: string = 'all';
+  currentSessionId: number | null = null;
+  sessionTitle: string = 'New Conversation';
+  conversations: ChatSession[] = [];
+  showConversationList: boolean = true;
+  searchQuery: string = '';
 
-  constructor(private chatService: ChatService) {}
+  constructor(
+    private chatService: ChatService,
+    private chatSessionService: ChatSessionService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
+    this.loadConversations();
+    const sessionId = this.route.snapshot.paramMap.get('id');
+    if (sessionId) {
+      this.loadConversation(parseInt(sessionId));
+    } else {
+      // No conversation ID in URL, load the most recent conversation
+      this.loadMostRecentConversation();
+    }
+  }
+
+  loadConversations(): void {
+    this.chatSessionService.getAllSessions().subscribe({
+      next: (sessions) => {
+        this.conversations = sessions;
+      },
+      error: (error) => {
+        console.error('Error loading conversations:', error);
+      }
+    });
+  }
+
+  loadMostRecentConversation(): void {
+    this.chatSessionService.getAllSessions().subscribe({
+      next: (sessions) => {
+        if (sessions.length > 0) {
+          // Load the most recent conversation (first in list since sorted by updatedAt DESC)
+          const mostRecent = sessions[0];
+          if (mostRecent.id) {
+            this.loadConversation(mostRecent.id);
+          }
+        } else {
+          // No conversations yet, show welcome message
+          this.addWelcomeMessage();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading conversations:', error);
+        // Fallback to welcome message on error
+        this.addWelcomeMessage();
+      }
+    });
+  }
+
+  loadConversation(sessionId: number): void {
+    this.chatSessionService.getSession(sessionId).subscribe({
+      next: (session) => {
+        this.currentSessionId = session.id || null;
+        this.sessionTitle = session.title;
+        this.messages = [];
+        if (session.messages) {
+          session.messages.forEach(msg => {
+            this.messages.push({
+              id: msg.id?.toString() || this.generateId(),
+              text: msg.content,
+              sender: msg.messageType === 'USER' ? 'user' : 'bot',
+              timestamp: new Date(msg.createdAt || new Date()),
+              tickets: msg.jiraResults ? JSON.parse(msg.jiraResults) : undefined,
+              jqlQuery: msg.generatedJql,
+              error: msg.messageType === 'ERROR'
+            });
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error loading conversation:', error);
+        this.addWelcomeMessage();
+      }
+    });
+  }
+
+  createNewConversation(): void {
+    this.currentSessionId = null;
+    this.sessionTitle = 'New Conversation';
+    this.messages = [];
     this.addWelcomeMessage();
+    this.router.navigate(['/chatbot'], { replaceUrl: true });
+  }
+
+  openConversation(id: number): void {
+    this.router.navigate(['/chatbot', id]);
+  }
+
+  get filteredConversations(): ChatSession[] {
+    const query = this.searchQuery.trim().toLowerCase();
+    if (!query) {
+      return this.conversations;
+    }
+    return this.conversations.filter(conv =>
+      conv.title?.toLowerCase().includes(query) ||
+      conv.lastMessagePreview?.toLowerCase().includes(query)
+    );
+  }
+
+  deleteConversation(id: number): void {
+    if (id && confirm('Are you sure you want to delete this conversation? This action is permanent.')) {
+      this.chatSessionService.deleteSession(id).subscribe({
+        next: () => {
+          this.conversations = this.conversations.filter(conv => conv.id !== id);
+          if (this.currentSessionId === id) {
+            this.createNewConversation();
+          }
+        },
+        error: (error) => {
+          console.error('Unable to delete conversation:', error);
+        }
+      });
+    }
+  }
+
+  renameConversation(id: number): void {
+    if (!id) return;
+    const newTitle = prompt('Enter new title:');
+    if (newTitle && newTitle.trim()) {
+      this.chatSessionService.updateSession(id, { title: newTitle.trim() }).subscribe({
+        next: () => {
+          this.loadConversations();
+        },
+        error: (error) => {
+          console.error('Unable to rename conversation:', error);
+        }
+      });
+    }
   }
 
   addWelcomeMessage(): void {
@@ -49,6 +184,40 @@ export class ChatbotComponent implements OnInit {
     };
     this.messages.push(userMessage);
 
+    const query = this.userInput;
+    this.userInput = '';
+    this.isLoading = true;
+
+    // Create conversation on first message if not exists
+    if (!this.currentSessionId) {
+      this.chatSessionService.createSessionWithAutoTitle(query).subscribe({
+        next: (session) => {
+          this.currentSessionId = session.id || null;
+          this.sessionTitle = session.title;
+          // Update URL to include conversation ID for persistence
+          if (this.currentSessionId) {
+            this.router.navigate(['/chatbot', this.currentSessionId], { replaceUrl: true });
+          }
+          // Save user message to the new conversation
+          this.saveMessageToDB(userMessage, 'USER');
+          // Proceed with AI call
+          this.proceedWithAIMessage(query, userMessage);
+        },
+        error: (error) => {
+          console.error('Error creating conversation:', error);
+          // Fallback: proceed without saving
+          this.proceedWithAIMessage(query, userMessage);
+        }
+      });
+    } else {
+      // Save user message to existing conversation
+      this.saveMessageToDB(userMessage, 'USER');
+      // Proceed with AI call
+      this.proceedWithAIMessage(query, userMessage);
+    }
+  }
+
+  private proceedWithAIMessage(query: string, userMessage: ChatMessage): void {
     const loadingMessage: ChatMessage = {
       id: this.generateId(),
       text: 'Thinking...',
@@ -58,23 +227,24 @@ export class ChatbotComponent implements OnInit {
     };
     this.messages.push(loadingMessage);
 
-    const query = this.userInput;
-    this.userInput = '';
-    this.isLoading = true;
-
     this.chatService.sendAIMessage(query).subscribe({
       next: (response) => {
         this.messages = this.messages.filter(m => !m.isLoading);
-        
+
         const botMessage: ChatMessage = {
           id: this.generateId(),
-          text: response.message,
+          text: response.success ? response.message : (response.error || response.message),
           sender: 'bot',
           timestamp: new Date(),
           tickets: response.tickets,
-          jqlQuery: response.jqlQuery
+          jqlQuery: response.jqlQuery,
+          error: !response.success
         };
         this.messages.push(botMessage);
+
+        // Save bot message to database
+        this.saveMessageToDB(botMessage, response.success ? 'ASSISTANT' : 'ERROR', response);
+
         this.isLoading = false;
         this.scrollToBottom();
       },
@@ -84,7 +254,6 @@ export class ChatbotComponent implements OnInit {
         let errorText = 'Sorry, I encountered an error. Please try again.';
         console.error('Chat error:', error);
 
-        // Extract error message from various possible sources
         if (error.message) {
           errorText = error.message;
         } else if (error.error && error.error.message) {
@@ -101,9 +270,54 @@ export class ChatbotComponent implements OnInit {
           error: true
         };
         this.messages.push(errorMessage);
+
+        // Save error message to database
+        this.saveMessageToDB(errorMessage, 'ERROR');
+
         this.isLoading = false;
         this.scrollToBottom();
       }
+    });
+  }
+
+  saveMessageToDB(message: ChatMessage, messageType: 'USER' | 'ASSISTANT' | 'ERROR', response?: any): void {
+    if (!this.currentSessionId) return;
+
+    const sessionMessage: ChatSessionMessage = {
+      content: message.text,
+      messageType: messageType,
+      generatedJql: message.jqlQuery,
+      jiraResults: message.tickets ? JSON.stringify(message.tickets) : undefined,
+      ticketCount: message.tickets?.length
+    };
+
+    this.chatSessionService.addMessage(this.currentSessionId, sessionMessage).subscribe({
+      next: (savedMessage) => {
+        console.log('Message saved to conversation:', this.currentSessionId);
+      },
+      error: (err) => console.error('Error saving message:', err)
+    });
+  }
+
+  saveMessages(): void {
+    if (!this.currentSessionId) return;
+
+    const sessionId = this.currentSessionId;
+    this.messages.forEach((msg, index) => {
+      if (index === 0) return; // Skip welcome message
+
+      const messageType = msg.sender === 'user' ? 'USER' : (msg.error ? 'ERROR' : 'ASSISTANT');
+      const sessionMessage: ChatSessionMessage = {
+        content: msg.text,
+        messageType: messageType,
+        generatedJql: msg.jqlQuery,
+        jiraResults: msg.tickets ? JSON.stringify(msg.tickets) : undefined,
+        ticketCount: msg.tickets?.length
+      };
+
+      this.chatSessionService.addMessage(sessionId, sessionMessage).subscribe({
+        error: (err) => console.error('Error saving message:', err)
+      });
     });
   }
 
@@ -165,5 +379,30 @@ export class ChatbotComponent implements OnInit {
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     }, 100);
+  }
+
+  convertToTicketDisplay(tickets: JiraTicket[] | undefined): JiraTicketDisplay[] {
+    if (!tickets) return [];
+    return tickets.map(ticket => ({
+      key: ticket.key,
+      summary: ticket.fields.summary,
+      status: ticket.fields.status?.name || 'Unknown',
+      priority: ticket.fields.priority?.name || 'Unknown',
+      assignee: ticket.fields.assignee?.displayName || 'Unassigned',
+      issueType: ticket.fields.issuetype?.name || 'Unknown',
+      updated: ticket.fields.updated,
+      url: `https://your-jira-instance.atlassian.net/browse/${ticket.key}`
+    }));
+  }
+
+  convertToProjectDisplay(projects: any[] | undefined): JiraProjectDisplay[] {
+    if (!projects) return [];
+    return projects.map(project => ({
+      key: project.key,
+      name: project.name,
+      projectType: project.projectTypeKey || 'Software',
+      lead: project.lead?.displayName || 'Unknown',
+      url: `https://your-jira-instance.atlassian.net/browse/${project.key}`
+    }));
   }
 }

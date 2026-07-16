@@ -14,8 +14,7 @@ export class ChatService {
 
   sendMessage(message: string): Observable<ChatResponse> {
     const request: ChatRequest = {
-      message: message,
-      sessionId: this.getSessionId()
+      message: message
     };
 
     return this.http.post<ChatResponse>(`${this.apiUrl}/chat`, request)
@@ -26,27 +25,13 @@ export class ChatService {
 
   sendAIMessage(message: string): Observable<ChatResponse> {
     const request: ChatRequest = {
-      message: message,
-      sessionId: this.getSessionId()
+      message: message
     };
 
     return this.http.post<ChatResponse>(`${this.apiUrl}/chat/ai`, request)
       .pipe(
         catchError(this.handleError)
       );
-  }
-
-  private getSessionId(): string {
-    let sessionId = localStorage.getItem('chatSessionId');
-    if (!sessionId) {
-      sessionId = this.generateSessionId();
-      localStorage.setItem('chatSessionId', sessionId);
-    }
-    return sessionId;
-  }
-
-  private generateSessionId(): string {
-    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {

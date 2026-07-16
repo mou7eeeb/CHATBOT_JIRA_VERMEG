@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -38,12 +37,9 @@ public class IntelligentChatService {
             if (intent == IntentDetectionService.Intent.JIRA_DATA) {
                 log.info("Routing to Jira data handler");
                 response = handleJiraDataRequest(request);
-            } else if (intent == IntentDetectionService.Intent.GENERAL_KNOWLEDGE) {
-                log.info("Routing to general knowledge handler");
-                response = handleGeneralKnowledgeRequest(request);
             } else {
-                log.info("Default: Routing to Jira data handler");
-                response = handleJiraDataRequest(request);
+                log.info("Default: Routing to general knowledge handler");
+                response = handleGeneralKnowledgeRequest(request);
             }
 
             long executionTime = System.currentTimeMillis() - startTime;
@@ -94,12 +90,45 @@ public class IntelligentChatService {
             log.info("=== Jira Data Request Completed ===");
             log.info("Execution Time: {}ms", executionTime);
 
-            return ChatResponse.builder()
-                    .success(true)
-                    .message(response)
-                    .jqlQuery(null)
-                    .tickets(new ArrayList<>())
-                    .build();
+            // Return structured response with actual Jira data
+            if (jiraData instanceof List) {
+                List<?> dataList = (List<?>) jiraData;
+                if (!dataList.isEmpty() && dataList.get(0) instanceof com.vermeg.jirachatbot.model.JiraTicket) {
+                    // It's a list of tickets
+                    @SuppressWarnings("unchecked")
+                    List<com.vermeg.jirachatbot.model.JiraTicket> tickets = (List<com.vermeg.jirachatbot.model.JiraTicket>) jiraData;
+
+                    // Apply deterministic filtering based on user request
+                    com.vermeg.jirachatbot.model.JiraSearchCriteria criteria = intentDetectionService.extractSearchCriteria(request.getMessage());
+                    if (criteria.getStatus() != null && !criteria.getStatus().isEmpty()) {
+                        String targetStatus = criteria.getStatus();
+                        log.info("Applying status filter: {}", targetStatus);
+                        log.info("Tickets before filter: {}", tickets.size());
+
+                        tickets = tickets.stream()
+                                .filter(ticket -> {
+                                    String ticketStatus = ticket.getFields().getStatusName();
+                                    boolean matches = ticketStatus.equalsIgnoreCase(targetStatus);
+                                    if (!matches) {
+                                        log.debug("Filtering out ticket {} with status {}", ticket.getKey(), ticketStatus);
+                                    }
+                                    return matches;
+                                })
+                                .collect(java.util.stream.Collectors.toList());
+
+                        log.info("Tickets after filter: {}", tickets.size());
+                    }
+
+                    return ChatResponse.success(response, null, tickets);
+                } else if (!dataList.isEmpty() && dataList.get(0) instanceof Map) {
+                    // It's a list of projects or other data
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> projects = (List<Map<String, Object>>) jiraData;
+                    return ChatResponse.successWithProjects(response, projects);
+                }
+            }
+
+            return ChatResponse.general(response);
 
         } catch (RuntimeException e) {
             long executionTime = System.currentTimeMillis() - startTime;
@@ -120,23 +149,30 @@ public class IntelligentChatService {
     }
 
     private Object retrieveJiraData(String userMessage) {
+        log.info("=== Retrieving Jira Data ===");
+        log.info("User message: {}", userMessage);
+
         // Profile information
         if (userMessage.contains("profile") || userMessage.contains("my information") || userMessage.contains("my jira")) {
+            log.info("Retrieving user profile");
             return jiraToolService.getCurrentUser();
         }
 
         // Projects
         if (userMessage.contains("projects") || userMessage.contains("my projects")) {
+            log.info("Retrieving projects");
             return jiraToolService.getProjects();
         }
 
         // Boards
         if (userMessage.contains("board") || userMessage.contains("boards")) {
+            log.info("Retrieving boards");
             return jiraToolService.getBoards();
         }
 
         // Sprints (requires board ID, simplified for now)
         if (userMessage.contains("sprint") || userMessage.contains("sprints")) {
+            log.info("Retrieving sprints");
             List<Map<String, Object>> boards = jiraToolService.getBoards();
             if (!boards.isEmpty()) {
                 Long firstBoardId = (Long) boards.get(0).get("id");
@@ -149,17 +185,29 @@ public class IntelligentChatService {
         if (userMessage.matches(".*[A-Z]+-\\d+.*")) {
             String issueKey = extractIssueKey(userMessage);
             if (issueKey != null) {
+                log.info("Retrieving specific issue: {}", issueKey);
                 return jiraToolService.getIssue(issueKey);
             }
         }
 
-        // Default: Use JQL search
+        // Default: Use JQL search with proper filtering
         String jql = intentDetectionService.generateJQLFromIntent(userMessage);
+        log.info("Generated JQL: {}", jql);
         if (jql != null) {
-            return jiraToolService.executeJQL(jql);
+            List<com.vermeg.jirachatbot.model.JiraTicket> results = jiraToolService.executeJQL(jql);
+            log.info("JQL returned {} tickets", results.size());
+            if (!results.isEmpty()) {
+                log.info("Ticket statuses in results: {}",
+                    results.stream()
+                        .map(t -> t.getFields().getStatusName())
+                        .distinct()
+                        .toList());
+            }
+            return results;
         }
 
         // Fallback to current user's issues
+        log.info("Using fallback JQL: assignee = currentUser()");
         return jiraToolService.executeJQL("assignee = currentUser()");
     }
 
@@ -175,7 +223,13 @@ public class IntelligentChatService {
     private String summarizeJiraDataWithAI(Object jiraData, String originalQuestion) {
         String dataContext = convertJiraDataToString(jiraData);
         String prompt = String.format(
-                "User asked: %s\n\nHere is the relevant Jira data:\n%s\n\nPlease provide a helpful, natural language response based ONLY on this data. Do not invent information.",
+                "User asked: %s\n\nHere is the relevant Jira data:\n%s\n\n" +
+                "IMPORTANT: Return only a short introductory summary (1-2 sentences max).\n" +
+                "Do NOT list each Jira issue or project individually.\n" +
+                "Do NOT repeat issue keys, summaries, statuses, or priorities.\n" +
+                "Do NOT format as a bulleted list.\n" +
+                "The frontend will display the structured Jira items separately in a table.\n" +
+                "Just provide a brief summary like 'I found X items matching your request.'",
                 originalQuestion,
                 dataContext
         );
@@ -211,6 +265,14 @@ public class IntelligentChatService {
     }
 
     private String formatItem(Object item) {
+        if (item instanceof com.vermeg.jirachatbot.model.JiraTicket) {
+            com.vermeg.jirachatbot.model.JiraTicket ticket = (com.vermeg.jirachatbot.model.JiraTicket) item;
+            return String.format("[%s] %s - Status: %s, Priority: %s",
+                    ticket.getKey(),
+                    ticket.getFields().getSummary(),
+                    ticket.getFields().getStatusName(),
+                    ticket.getFields().getPriorityName());
+        }
         if (item instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) item;
             Object key = map.get("key");
@@ -240,23 +302,13 @@ public class IntelligentChatService {
                 response = generateSmartResponse(request.getMessage());
             }
 
-            return ChatResponse.builder()
-                    .success(true)
-                    .message(response)
-                    .jqlQuery(null)
-                    .tickets(new ArrayList<>())
-                    .build();
+            return ChatResponse.general(response);
 
         } catch (RuntimeException e) {
             String msg = e.getMessage() != null ? e.getMessage() : "";
             if (msg.contains("429")) {
                 log.warn("Groq rate limit exceeded, falling back to demo mode");
-                return ChatResponse.builder()
-                        .success(true)
-                        .message(generateSmartResponse(request.getMessage()))
-                        .jqlQuery(null)
-                        .tickets(new ArrayList<>())
-                        .build();
+                return ChatResponse.general(generateSmartResponse(request.getMessage()));
             }
             log.error("Error calling Groq API: {}", e.getMessage(), e);
             throw e;

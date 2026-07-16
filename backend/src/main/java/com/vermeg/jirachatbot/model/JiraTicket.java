@@ -34,12 +34,15 @@ public class JiraTicket {
         
         @JsonProperty("summary")
         private String summary;
-        
+
         @JsonProperty("description")
-        private String description;
-        
+        private Map<String, Object> description;
+
         @JsonProperty("status")
         private Map<String, Object> status;
+
+        @JsonProperty("statuscategory")
+        private Map<String, Object> statusCategory;
         
         @JsonProperty("issuetype")
         private Map<String, Object> issueType;
@@ -85,6 +88,13 @@ public class JiraTicket {
                 return (String) assignee.get("displayName");
             }
             return "Unassigned";
+        }
+
+        public String getStatusCategoryName() {
+            if (statusCategory != null && statusCategory.containsKey("name")) {
+                return (String) statusCategory.get("name");
+            }
+            return "Unknown";
         }
     }
 }

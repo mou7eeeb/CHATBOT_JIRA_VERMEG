@@ -33,7 +33,21 @@ public class JiraToolService {
 
     private JiraConnection getActiveJiraConnection() {
         log.debug("=== Retrieving Active Jira Connection ===");
-        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal == null) {
+            log.error("Authentication principal is null");
+            throw new RuntimeException("User not authenticated. Please log in to access Jira features.");
+        }
+        
+        UserPrincipal userPrincipal;
+        try {
+            userPrincipal = (UserPrincipal) principal;
+        } catch (ClassCastException e) {
+            log.error("Principal is not UserPrincipal, it's: {}", principal.getClass().getName());
+            throw new RuntimeException("User not authenticated properly. Please log in again.");
+        }
+        
         Long userId = userPrincipal.getId();
         log.debug("Current User ID: {}", userId);
 
@@ -272,7 +286,7 @@ public class JiraToolService {
         try {
             validateConnection();
             JiraConnection connection = getActiveJiraConnection();
-            String url = connection.getJiraBaseUrl() + "/rest/api/3/search";
+            String url = connection.getJiraBaseUrl() + "/rest/api/3/search/jql";
 
             log.debug("Request URL: {}", url);
             HttpHeaders headers = createAuthHeaders(connection);

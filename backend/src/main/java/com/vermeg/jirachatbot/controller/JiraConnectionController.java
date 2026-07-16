@@ -72,4 +72,22 @@ public class JiraConnectionController {
             return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
         }
     }
+
+    @PatchMapping("/{id}/default")
+    public ResponseEntity<?> setAsDefault(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(jiraConnectionService.setAsDefault(id));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> toggleStatus(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(jiraConnectionService.toggleStatus(id));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
 }

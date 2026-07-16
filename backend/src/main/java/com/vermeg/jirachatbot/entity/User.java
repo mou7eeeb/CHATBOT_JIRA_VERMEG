@@ -1,5 +1,6 @@
 package com.vermeg.jirachatbot.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -68,10 +69,12 @@ public class User {
     private LocalDateTime lastLoginAt;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     @Builder.Default
     private List<JiraConnection> jiraConnections = new ArrayList<>();
-    
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     @Builder.Default
     private List<ChatSession> chatSessions = new ArrayList<>();
     

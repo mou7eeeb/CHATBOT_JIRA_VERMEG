@@ -1,5 +1,6 @@
 package com.vermeg.jirachatbot.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +24,7 @@ public class ChatMessage {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_session_id", nullable = false)
+    @JsonIgnore
     private ChatSession chatSession;
     
     @Enumerated(EnumType.STRING)

@@ -129,6 +129,30 @@ export class JiraConnectionsComponent implements OnInit {
     }
   }
 
+  setAsDefault(id: number): void {
+    this.jiraConnectionService.setAsDefault(id).subscribe({
+      next: () => {
+        this.success = 'Connection set as default';
+        this.loadConnections();
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'Failed to set as default';
+      }
+    });
+  }
+
+  toggleStatus(id: number): void {
+    this.jiraConnectionService.toggleStatus(id).subscribe({
+      next: () => {
+        this.success = 'Connection status updated';
+        this.loadConnections();
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'Failed to update status';
+      }
+    });
+  }
+
   private getEmptyConnection(): JiraConnection {
     return {
       connectionName: '',

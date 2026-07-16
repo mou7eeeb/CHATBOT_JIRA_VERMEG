@@ -1,5 +1,6 @@
 package com.vermeg.jirachatbot.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,10 +27,12 @@ public class ChatSession {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "jira_connection_id")
+    @JsonIgnore
     private JiraConnection jiraConnection;
     
     @Column(nullable = false)

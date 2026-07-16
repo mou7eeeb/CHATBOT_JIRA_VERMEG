@@ -35,4 +35,12 @@ export class JiraConnectionService {
   testConnection(id: number): Observable<JiraConnectionResponse> {
     return this.http.post<JiraConnectionResponse>(`${this.apiUrl}/${id}/test`, {});
   }
+
+  setAsDefault(id: number): Observable<JiraConnectionResponse> {
+    return this.http.patch<JiraConnectionResponse>(`${this.apiUrl}/${id}/default`, {});
+  }
+
+  toggleStatus(id: number): Observable<JiraConnectionResponse> {
+    return this.http.patch<JiraConnectionResponse>(`${this.apiUrl}/${id}/status`, {});
+  }
 }

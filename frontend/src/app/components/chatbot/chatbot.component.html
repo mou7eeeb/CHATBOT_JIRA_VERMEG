@@ -1,8 +1,85 @@
 <div class="chatbot-layout">
-  <app-sidebar></app-sidebar>
+  <!-- Conversation History Sidebar -->
+  <div class="conversation-sidebar" [class.hidden]="!showConversationList">
+    <div class="conversation-header">
+      <h3>Conversations</h3>
+      <button class="close-sidebar-btn" (click)="showConversationList = false" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="conversation-actions">
+      <button class="new-chat-btn" (click)="createNewConversation()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        New Chat
+      </button>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Search conversations..."
+        class="search-input"
+      />
+    </div>
+
+    <div class="conversation-list">
+      <div
+        *ngFor="let conv of filteredConversations"
+        class="conversation-item"
+        [class.active]="conv.id === currentSessionId"
+        (click)="openConversation(conv.id!)">
+        <div class="conversation-info">
+          <h4>{{ conv.title }}</h4>
+          <p *ngIf="conv.lastMessagePreview" class="preview">{{ conv.lastMessagePreview }}</p>
+          <div class="conversation-meta">
+            <span class="date">{{ conv.updatedAt | date:'short' }}</span>
+            <span *ngIf="conv.messageCount" class="message-count">{{ conv.messageCount }} messages</span>
+          </div>
+        </div>
+        <div class="conversation-item-actions">
+          <button
+            class="action-btn rename-btn"
+            (click)="conv.id !== undefined && renameConversation(conv.id); $event.stopPropagation()"
+            title="Rename">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+          </button>
+          <button
+            class="action-btn delete-btn"
+            (click)="conv.id !== undefined && deleteConversation(conv.id); $event.stopPropagation()"
+            title="Delete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="filteredConversations.length === 0" class="empty-state">
+        <p>No conversations yet</p>
+        <button class="start-chat-btn" (click)="createNewConversation()">Start a new chat</button>
+      </div>
+    </div>
+  </div>
+
   <div class="chat-container">
     <div class="chat-header">
       <div class="header-content">
+        <button class="toggle-sidebar-btn" (click)="showConversationList = !showConversationList" title="Toggle conversation history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
         <div class="header-title">
           <svg class="jira-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.005-1.005zm5.723-5.756H5.736a5.215 5.215 0 0 0 5.215 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.758a1.001 1.001 0 0 0-1.001-1.001zM11.294 0H23.02a1 1 0 0 1 1 1v11.725a5.214 5.214 0 0 1-5.215-5.214V5.453h-2.129A5.214 5.214 0 0 1 11.294 0z" fill="#2684FF"/>
@@ -36,43 +113,15 @@
           <strong>JQL Query:</strong> <code>{{ message.jqlQuery }}</code>
         </div>
 
-        <div *ngIf="message.tickets && message.tickets.length > 0" class="tickets-container">
-          <div class="tickets-header">
-            <span class="tickets-count">{{ getFilteredTickets(message.tickets).length }} ticket(s)</span>
-            <select [(ngModel)]="selectedStatus" class="status-filter">
-              <option *ngFor="let status of getUniqueStatuses(message.tickets)" [value]="status">
-                {{ status === 'all' ? 'All Statuses' : status }}
-              </option>
-            </select>
-          </div>
+        <app-jira-issues-table
+          *ngIf="message.tickets && message.tickets.length > 0"
+          [tickets]="convertToTicketDisplay(message.tickets)">
+        </app-jira-issues-table>
 
-          <div class="tickets-list">
-            <div *ngFor="let ticket of getFilteredTickets(message.tickets)" class="ticket-card">
-              <div class="ticket-header">
-                <span class="ticket-key">{{ ticket.key }}</span>
-                <span class="ticket-type">{{ ticket.fields.issuetype.name }}</span>
-              </div>
-              
-              <div class="ticket-summary">{{ ticket.fields.summary }}</div>
-              
-              <div class="ticket-meta">
-                <span class="ticket-status" [style.background-color]="getStatusColor(ticket.fields.status.name)">
-                  {{ ticket.fields.status.name }}
-                </span>
-                
-                <span *ngIf="ticket.fields.priority" 
-                      class="ticket-priority" 
-                      [style.color]="getPriorityColor(ticket.fields.priority.name)">
-                  {{ ticket.fields.priority.name }}
-                </span>
-                
-                <span *ngIf="ticket.fields.assignee" class="ticket-assignee">
-                  👤 {{ ticket.fields.assignee.displayName }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <app-jira-projects-table
+          *ngIf="message.projects && message.projects.length > 0"
+          [projects]="convertToProjectDisplay(message.projects)">
+        </app-jira-projects-table>
 
         <div class="message-time">{{ message.timestamp | date:'short' }}</div>
       </div>

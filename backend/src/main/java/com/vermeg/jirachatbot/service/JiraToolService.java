@@ -180,7 +180,6 @@ public class JiraToolService {
             try {
                 Map<String, Object> errorMap = objectMapper.readValue(responseBody, Map.class);
                 if (errorMap.containsKey("errorMessages")) {
-                    @SuppressWarnings("unchecked")
                     List<String> errorMessages = (List<String>) errorMap.get("errorMessages");
                     if (!errorMessages.isEmpty()) {
                         return "Jira Error: " + errorMessages.get(0);
@@ -261,7 +260,6 @@ public class JiraToolService {
             log.info("Execution Time: {}ms", executionTime);
 
             if (response.getBody() != null && response.getBody().containsKey("values")) {
-                @SuppressWarnings("unchecked")
                 List<Map<String, Object>> projects = (List<Map<String, Object>>) response.getBody().get("values");
                 log.info("Found {} projects", projects.size());
                 return projects;
@@ -312,7 +310,6 @@ public class JiraToolService {
             log.info("Execution Time: {}ms", executionTime);
 
             if (response.getBody() != null && response.getBody().containsKey("issues")) {
-                @SuppressWarnings("unchecked")
                 List<Map<String, Object>> issues = (List<Map<String, Object>>) response.getBody().get("issues");
                 List<JiraTicket> tickets = issues.stream()
                         .map(issue -> objectMapper.convertValue(issue, JiraTicket.class))
@@ -400,7 +397,6 @@ public class JiraToolService {
             log.info("Execution Time: {}ms", executionTime);
 
             if (response.getBody() != null && response.getBody().containsKey("values")) {
-                @SuppressWarnings("unchecked")
                 List<Map<String, Object>> boards = (List<Map<String, Object>>) response.getBody().get("values");
                 log.info("Found {} boards", boards.size());
                 return boards;
@@ -444,7 +440,6 @@ public class JiraToolService {
             log.info("Execution Time: {}ms", executionTime);
 
             if (response.getBody() != null && response.getBody().containsKey("values")) {
-                @SuppressWarnings("unchecked")
                 List<Map<String, Object>> sprints = (List<Map<String, Object>>) response.getBody().get("values");
                 log.info("Found {} sprints", sprints.size());
                 return sprints;

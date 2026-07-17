@@ -2,7 +2,6 @@ package com.vermeg.jirachatbot.service;
 
 import com.vermeg.jirachatbot.model.ChatRequest;
 import com.vermeg.jirachatbot.model.ChatResponse;
-import com.vermeg.jirachatbot.model.JiraTicket;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

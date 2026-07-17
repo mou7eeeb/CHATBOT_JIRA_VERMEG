@@ -28,21 +28,15 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        config.setAllowedOrigins(origins);
-        
-        List<String> methods = Arrays.asList(allowedMethods.split(","));
-        config.setAllowedMethods(methods);
-        
-        List<String> headers = Arrays.asList(allowedHeaders.split(","));
-        config.setAllowedHeaders(headers);
-        
-        config.setAllowCredentials(allowCredentials);
-        
+        config.setAllowCredentials(true);
+        config.addAllowedOriginPattern("*");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        config.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-        
+
         return new CorsFilter(source);
     }
 }

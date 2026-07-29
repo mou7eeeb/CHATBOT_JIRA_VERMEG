@@ -139,7 +139,7 @@
         [(ngModel)]="userInput"
         (keydown.enter)="handleEnterKey($event)"
         [disabled]="isLoading"
-        placeholder="Message Claude..."
+        placeholder="Ask your Jira assistant..."
         class="chat-input"
         rows="1"
         #chatInput
@@ -157,7 +157,7 @@
       </button>
     </div>
     <div class="input-footer">
-      <span class="input-hint">Claude can make mistakes. Please double-check responses.</span>
+      <span class="input-hint">AI responses may be inaccurate. Verify critical Jira changes before acting.</span>
     </div>
   </div>
   </div>

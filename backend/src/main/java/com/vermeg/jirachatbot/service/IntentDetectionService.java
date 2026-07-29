@@ -59,7 +59,7 @@ public class IntentDetectionService {
             return Intent.UNKNOWN;
         }
 
-        String lowerMessage = userMessage.toLowerCase().trim();
+        String lowerMessage = normalizeForMatching(userMessage);
         log.info("Detecting intent for message: {}", lowerMessage);
 
         // Check for Jira-related patterns
@@ -100,8 +100,8 @@ public class IntentDetectionService {
         }
 
         // Check for personal pronouns with work-related terms (French)
-        if ((message.contains("mes ") || message.contains("mon ") || message.contains("affiche ") || message.contains("montre ") || message.contains("liste ")) &&
-                (message.contains("ticket") || message.contains("tâche") || message.contains("projet") ||
+        if ((message.contains("mes ") || message.contains("mon ") || message.contains("affiche ") || message.contains("montre ") || message.contains("liste ") || message.contains("just ")) &&
+                (message.contains("ticket") || message.contains("tache") || message.contains("projet") ||
                  message.contains("sprint") || message.contains("board"))) {
             return true;
         }
@@ -133,7 +133,7 @@ public class IntentDetectionService {
     }
 
     public JiraSearchCriteria extractSearchCriteria(String userMessage) {
-        String lowerMessage = userMessage.toLowerCase();
+        String lowerMessage = normalizeForMatching(userMessage);
         log.info("Extracting search criteria from message: {}", lowerMessage);
 
         JiraSearchCriteria criteria = JiraSearchCriteria.builder()
@@ -141,13 +141,13 @@ public class IntentDetectionService {
                 .build();
 
         // Extract status filter
-        if (lowerMessage.contains("à faire") || lowerMessage.contains("todo") || lowerMessage.contains("backlog")) {
+        if (lowerMessage.contains("a faire") || lowerMessage.contains("a afire") || lowerMessage.contains("todo") || lowerMessage.contains("to do") || lowerMessage.contains("backlog")) {
             criteria.setStatus("To Do");
             log.info("Detected status filter: To Do");
         } else if (lowerMessage.contains("en cours") || lowerMessage.contains("in progress") || lowerMessage.contains("active")) {
             criteria.setStatus("In Progress");
             log.info("Detected status filter: In Progress");
-        } else if (lowerMessage.contains("terminé") || lowerMessage.contains("done") || lowerMessage.contains("completed") || lowerMessage.contains("closed")) {
+        } else if (lowerMessage.contains("termine") || lowerMessage.contains("done") || lowerMessage.contains("completed") || lowerMessage.contains("closed")) {
             criteria.setStatus("Done");
             log.info("Detected status filter: Done");
         } else if (lowerMessage.contains("revue") || lowerMessage.contains("review")) {
@@ -177,7 +177,8 @@ public class IntentDetectionService {
         } else if (lowerMessage.contains("story") || lowerMessage.contains("user story")) {
             criteria.setIssueType("Story");
             log.info("Detected issue type: Story");
-        } else if (lowerMessage.contains("task") || lowerMessage.contains("tâche")) {
+        } else if (Pattern.compile("\\b(?:type|issuetype)\\s*[:=]?\\s*(?:task|tache)\\b")
+                .matcher(lowerMessage).find()) {
             criteria.setIssueType("Task");
             log.info("Detected issue type: Task");
         }
@@ -219,7 +220,14 @@ public class IntentDetectionService {
         // Status
         if (criteria.getStatus() != null && !criteria.getStatus().isEmpty()) {
             if (hasCondition) jql.append(" AND ");
-            jql.append("status = '").append(criteria.getStatus()).append("'");
+            if ("Done".equalsIgnoreCase(criteria.getStatus())) {
+                jql.append("statusCategory = Done");
+            } else if ("To Do".equalsIgnoreCase(criteria.getStatus())
+                    || "In Progress".equalsIgnoreCase(criteria.getStatus())) {
+                jql.append("statusCategory = '").append(criteria.getStatus()).append("'");
+            } else {
+                jql.append("status = '").append(criteria.getStatus()).append("'");
+            }
             hasCondition = true;
         }
 
@@ -250,7 +258,7 @@ public class IntentDetectionService {
     }
 
     public String generateJQLFromIntent(String userMessage) {
-        String lowerMessage = userMessage.toLowerCase();
+        String lowerMessage = normalizeForMatching(userMessage);
         log.info("Generating JQL from intent for message: {}", lowerMessage);
 
         // Profile information
@@ -266,5 +274,15 @@ public class IntentDetectionService {
         // Use the new criteria-based approach
         JiraSearchCriteria criteria = extractSearchCriteria(userMessage);
         return generateJQLFromCriteria(criteria);
+    }
+
+    private String normalizeForMatching(String value) {
+        if (value == null) {
+            return "";
+        }
+        return java.text.Normalizer.normalize(value, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase()
+                .trim();
     }
 }

@@ -1,72 +1,75 @@
-<div class="jira-issues-container" *ngIf="tickets && tickets.length > 0">
-  <div class="issues-table-wrapper">
-    <table class="issues-table">
-      <thead>
-        <tr>
-          <th>Clé</th>
-          <th>Résumé</th>
-          <th>Statut</th>
-          <th>Priorité</th>
-          <th>Assigné à</th>
-          <th>Type</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let ticket of tickets">
-          <td class="ticket-key">{{ ticket.key }}</td>
-          <td class="ticket-summary">{{ ticket.summary }}</td>
-          <td>
-            <span class="status-badge" [ngClass]="getStatusClass(ticket.status)">
-              {{ ticket.status }}
-            </span>
-          </td>
-          <td>
-            <span class="priority-badge" [ngClass]="getPriorityClass(ticket.priority)">
-              {{ ticket.priority }}
-            </span>
-          </td>
-          <td class="ticket-assignee">{{ ticket.assignee }}</td>
-          <td class="ticket-type">{{ ticket.issueType }}</td>
-          <td class="ticket-action">
-            <button 
-              class="btn-open-jira" 
-              (click)="openJiraTicket(getTicketUrl(ticket.key))"
-              title="Ouvrir dans Jira">
-              Ouvrir
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<section class="jira-board" *ngIf="tickets?.length">
+  <header class="board-header">
+    <div>
+      <div class="board-eyebrow">Résultats Jira</div>
+      <h3>Mes tâches <span>{{ filteredTickets.length }}</span></h3>
+    </div>
+    <div class="result-summary">{{ filteredTickets.length }} sur {{ tickets.length }}</div>
+  </header>
 
-  <!-- Mobile cards view -->
-  <div class="issues-cards-mobile">
-    <div class="issue-card" *ngFor="let ticket of tickets">
-      <div class="card-header">
-        <span class="card-key">{{ ticket.key }}</span>
+  <nav class="status-filters" aria-label="Filtrer les tâches par statut">
+    <button *ngFor="let filter of availableFilters"
+            type="button"
+            class="filter-chip"
+            [class.active]="selectedStatus === filter.value"
+            (click)="selectStatus(filter.value)">
+      {{ filter.label }}
+      <span>{{ filter.count }}</span>
+    </button>
+  </nav>
+
+  <div class="ticket-grid" *ngIf="filteredTickets.length; else emptyState">
+    <article class="ticket-card"
+             *ngFor="let ticket of filteredTickets; trackBy: trackByKey"
+             [ngClass]="getStatusClass(ticket.status)">
+      <div class="card-top">
+        <button class="ticket-key" type="button"
+                (click)="openJiraTicket(ticket.url || getTicketUrl(ticket.key))">
+          {{ ticket.key }}
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>
+          </svg>
+        </button>
         <span class="status-badge" [ngClass]="getStatusClass(ticket.status)">
-          {{ ticket.status }}
+          <i></i>{{ ticket.status }}
         </span>
       </div>
-      <div class="card-body">
-        <p class="card-summary">{{ ticket.summary }}</p>
-        <div class="card-meta">
-          <span class="priority-badge" [ngClass]="getPriorityClass(ticket.priority)">
+
+      <h4>{{ ticket.summary }}</h4>
+
+      <div class="ticket-meta">
+        <div class="meta-item">
+          <span>Priorité</span>
+          <strong class="priority-badge" [ngClass]="getPriorityClass(ticket.priority)">
             {{ ticket.priority }}
-          </span>
-          <span class="card-assignee">{{ ticket.assignee }}</span>
+          </strong>
+        </div>
+        <div class="meta-item">
+          <span>Type</span>
+          <strong>{{ ticket.issueType }}</strong>
         </div>
       </div>
-      <div class="card-footer">
-        <button 
-          class="btn-open-jira" 
-          (click)="openJiraTicket(getTicketUrl(ticket.key))"
-          title="Ouvrir dans Jira">
-          Ouvrir dans Jira
+
+      <footer class="card-footer">
+        <div class="assignee-avatar">{{ (ticket.assignee || '?').charAt(0).toUpperCase() }}</div>
+        <div class="assignee">
+          <span>Assignée à</span>
+          <strong>{{ ticket.assignee }}</strong>
+        </div>
+        <button class="open-button" type="button"
+                (click)="openJiraTicket(ticket.url || getTicketUrl(ticket.key))">
+          Ouvrir
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
         </button>
-      </div>
-    </div>
+      </footer>
+    </article>
   </div>
-</div>
+
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <div>✓</div>
+      <strong>Aucune tâche dans cette catégorie</strong>
+      <span>Choisissez un autre statut pour afficher vos tickets.</span>
+    </div>
+  </ng-template>
+</section>

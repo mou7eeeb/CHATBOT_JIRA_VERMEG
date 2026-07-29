@@ -15,6 +15,7 @@ import { User } from '../../../models/auth.model';
 export class SidebarComponent implements OnInit {
   isAdmin: boolean = false;
   currentUser$: Observable<User | null>;
+  isCollapsed: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -38,6 +39,10 @@ export class SidebarComponent implements OnInit {
       console.log('🔐 Is Admin updated:', this.isAdmin);
       this.cdr.detectChanges(); // Forcer la détection de changement
     });
+  }
+
+  toggleCollapse(): void {
+    this.isCollapsed = !this.isCollapsed;
   }
 
   logout(): void {

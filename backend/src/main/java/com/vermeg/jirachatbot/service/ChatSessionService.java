@@ -31,6 +31,7 @@ public class ChatSessionService {
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
     private final JiraConnectionRepository jiraConnectionRepository;
+    private final NotificationService notificationService;
 
     private Long getCurrentUserId() {
         UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -184,6 +185,9 @@ public class ChatSessionService {
                 .build();
 
         message = chatMessageRepository.save(message);
+        if (message.getMessageType() == ChatMessage.MessageType.ASSISTANT) {
+            notificationService.create(session.getUser(), message.getContent(), session.getId());
+        }
         log.info("Added message to session: {}", sessionId);
 
         return mapMessageToDTO(message);

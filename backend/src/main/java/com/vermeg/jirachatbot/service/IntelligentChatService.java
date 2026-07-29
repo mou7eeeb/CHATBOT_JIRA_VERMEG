@@ -107,7 +107,7 @@ public class IntelligentChatService {
                         tickets = tickets.stream()
                                 .filter(ticket -> {
                                     String ticketStatus = ticket.getFields().getStatusName();
-                                    boolean matches = ticketStatus.equalsIgnoreCase(targetStatus);
+                                    boolean matches = statusesMatch(ticketStatus, targetStatus);
                                     if (!matches) {
                                         log.debug("Filtering out ticket {} with status {}", ticket.getKey(), ticketStatus);
                                     }
@@ -116,6 +116,9 @@ public class IntelligentChatService {
                                 .collect(java.util.stream.Collectors.toList());
 
                         log.info("Tickets after filter: {}", tickets.size());
+                        response = tickets.isEmpty()
+                                ? "Aucune tâche ne correspond à ce statut."
+                                : String.format("%d tâche(s) Jira trouvée(s) pour le statut demandé.", tickets.size());
                     }
 
                     return ChatResponse.success(response, null, tickets);
@@ -208,6 +211,50 @@ public class IntelligentChatService {
         // Fallback to current user's issues
         log.info("Using fallback JQL: assignee = currentUser()");
         return jiraToolService.executeJQL("assignee = currentUser()");
+    }
+
+    private boolean statusesMatch(String jiraStatus, String requestedStatus) {
+        String actual = normalizeStatus(jiraStatus);
+        String requested = normalizeStatus(requestedStatus);
+
+        if (actual.equals(requested)) {
+            return true;
+        }
+
+        return statusCategory(actual).equals(statusCategory(requested));
+    }
+
+    private String statusCategory(String status) {
+        if (containsAny(status, "done", "closed", "resolved", "completed", "termine", "ferme")) {
+            return "done";
+        }
+        if (containsAny(status, "in progress", "progress", "active", "en cours")) {
+            return "in-progress";
+        }
+        if (containsAny(status, "review", "in review", "revue")) {
+            return "review";
+        }
+        if (containsAny(status, "blocked", "bloque", "error")) {
+            return "blocked";
+        }
+        if (containsAny(status, "to do", "todo", "backlog", "a faire", "open")) {
+            return "todo";
+        }
+        return status;
+    }
+
+    private boolean containsAny(String value, String... candidates) {
+        return java.util.Arrays.stream(candidates).anyMatch(value::contains);
+    }
+
+    private String normalizeStatus(String status) {
+        if (status == null) {
+            return "";
+        }
+        return java.text.Normalizer.normalize(status, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase()
+                .trim();
     }
 
     private String extractIssueKey(String message) {
